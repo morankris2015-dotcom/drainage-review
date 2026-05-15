@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>מערכת בדיקת תוכניות ניקוז</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --pr:#1D4E89;--pr-l:#E8F0F9;--pr-m:#3A72B8;
+  --ac:#1D9E75;--ac-l:#E1F5EE;
+  --wn:#BA7517;--wn-l:#FAEEDA;
+  --dn:#A32D2D;--dn-l:#FCEBEB;
+  --tx:#1a1a1a;--tx2:#5a5a5a;--tx3:#9a9a9a;
+  --bd:rgba(0,0,0,0.1);--bd2:rgba(0,0,0,0.2);
+  --sf:#fff;--sf2:#f6f5f2;--sf3:#edece8;
+  --rd:10px;--rds:6px;
+  --sh:0 1px 3px rgba(0,0,0,0.07),0 4px 16px rgba(0,0,0,0.04);
+}
+@media(prefers-color-scheme:dark){:root{
+  --tx:#f0ede8;--tx2:#9e9b94;--tx3:#6a6860;
+  --bd:rgba(255,255,255,0.08);--bd2:rgba(255,255,255,0.18);
+  --sf:#1e1e1c;--sf2:#272724;--sf3:#313130;
+  --pr-l:#1a2d44;--ac-l:#0d2b20;--wn-l:#2c2010;--dn-l:#2a1010;
+}}
+body{font-family:'Segoe UI',Arial,sans-serif;background:var(--sf2);color:var(--tx);min-height:100vh;direction:rtl}
+
+/* NAV */
+.nav{background:var(--sf);border-bottom:.5px solid var(--bd);padding:0 1.5rem;display:flex;align-items:center;justify-content:space-between;height:54px;position:sticky;top:0;z-index:100;box-shadow:var(--sh)}
+.nav-brand{display:flex;align-items:center;gap:9px}
+.nav-brand i{font-size:22px;color:var(--pr)}
+.nav-brand h1{font-size:15px;font-weight:600}
+.nav-brand small{font-size:11px;color:var(--tx2);display:block;line-height:1.2}
+.nav-links{display:flex;gap:4px}
+.nb{display:flex;align-items:center;gap:5px;padding:6px 13px;border-radius:var(--rds);font-size:13px;font-weight:500;cursor:pointer;border:none;background:transparent;color:var(--tx2);transition:all .15s}
+.nb:hover,.nb.on{background:var(--sf2);color:var(--tx)}
+.nb.on{color:var(--pr)}
+.nb i{font-size:16px}
+
+.pg{display:none}.pg.vis{display:block}
+.wrap{max-width:820px;margin:0 auto;padding:1.75rem 1.25rem}
+
+/* MODE SELECTOR */
+.mode-bar{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1.5rem}
+.mode-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:1.25rem 1rem;border-radius:var(--rd);border:1.5px solid var(--bd2);background:var(--sf);cursor:pointer;font-size:14px;font-weight:600;color:var(--tx2);transition:all .2s;text-align:center}
+.mode-btn:hover{border-color:var(--pr);color:var(--pr);background:var(--pr-l)}
+.mode-btn.on{border-color:var(--pr);background:var(--pr-l);color:var(--pr)}
+.mode-btn i{font-size:26px}
+.mode-sub{font-size:11px;font-weight:400;color:var(--tx3);margin-top:2px;line-height:1.4}
+
+/* STEPPER */
+.stepper{display:flex;align-items:center;background:var(--sf);border:.5px solid var(--bd);border-radius:var(--rd);padding:.9rem 1.25rem;margin-bottom:1.25rem;box-shadow:var(--sh);overflow-x:auto;gap:0}
+.si{display:flex;align-items:center;gap:8px;flex:1;min-width:90px}
+.sconn{width:24px;height:1px;background:var(--bd2);flex-shrink:0}
+.sdot{width:28px;height:28px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;background:var(--sf2);border:1.5px solid var(--bd2);color:var(--tx2);transition:all .2s}
+.sdot.on{background:var(--pr);border-color:var(--pr);color:#fff}
+.sdot.dn{background:var(--ac);border-color:var(--ac);color:#fff}
+.slbl{font-size:10px;color:var(--tx3)}
+.sname{font-size:12px;font-weight:500;color:var(--tx2)}
+.si.on .sname{color:var(--pr)}.si.dn .sname{color:var(--ac)}
+
+/* CARD */
+.card{background:var(--sf);border:.5px solid var(--bd);border-radius:var(--rd);padding:1.4rem;margin-bottom:.9rem;box-shadow:var(--sh)}
+.ch{display:flex;align-items:center;gap:9px;padding-bottom:.9rem;margin-bottom:.9rem;border-bottom:.5px solid var(--bd)}
+.ch i{font-size:20px;color:var(--pr)}.ct{font-size:15px;font-weight:600}.cs{font-size:12px;color:var(--tx2);margin-top:1px}
+
+/* ALERTS */
+.al{display:flex;align-items:flex-start;gap:9px;padding:9px 13px;border-radius:var(--rds);margin-bottom:.9rem;font-size:13px;line-height:1.6}
+.al i{font-size:17px;flex-shrink:0;margin-top:1px}
+.al-i{background:var(--pr-l);border:.5px solid rgba(29,78,137,.25)}.al-i i{color:var(--pr)}
+.al-w{background:var(--wn-l);border:.5px solid rgba(186,117,23,.25)}.al-w i{color:var(--wn)}
+.al-s{background:var(--ac-l);border:.5px solid rgba(29,158,117,.25)}.al-s i{color:var(--ac)}
+
+/* UPLOAD */
+.upz{border:2px dashed var(--bd2);border-radius:var(--rd);padding:1.4rem;text-align:center;cursor:pointer;transition:all .15s;background:var(--sf2);margin-bottom:.9rem;position:relative}
+.upz:hover,.upz.drag{border-color:var(--pr);background:var(--pr-l)}
+.upz input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%}
+.upz i{font-size:28px;color:var(--tx2);margin-bottom:6px;display:block}.upz:hover i,.upz.drag i{color:var(--pr)}
+.upz p{font-size:13px;color:var(--tx2);margin-bottom:2px}.upz span{font-size:11px;color:var(--tx3)}
+
+/* FILE LIST */
+.fl{display:flex;flex-direction:column;gap:6px}
+.fi{display:flex;align-items:center;gap:9px;padding:8px 12px;border-radius:var(--rds);border:.5px solid var(--bd);background:var(--sf2)}
+.fi i.ic{font-size:18px;color:var(--pr);flex-shrink:0}
+.fm{flex:1;min-width:0}
+.fn{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fi2{font-size:11px;color:var(--tx2);margin-top:1px}
+.badge{font-size:11px;font-weight:500;padding:2px 8px;border-radius:99px;flex-shrink:0;white-space:nowrap}
+.b-ok{background:var(--ac-l);color:var(--ac);border:.5px solid rgba(29,158,117,.3)}
+.b-key{background:var(--wn-l);color:var(--wn);border:.5px solid rgba(186,117,23,.3)}
+.b-pr{background:var(--pr-l);color:var(--pr);border:.5px solid rgba(29,78,137,.3)}
+.b-nd{background:var(--sf3);color:var(--tx2);border:.5px solid var(--bd)}
+.frm{background:none;border:none;cursor:pointer;color:var(--tx2);font-size:15px;padding:2px;display:flex;border-radius:4px;transition:color .1s}.frm:hover{color:var(--dn)}
+
+/* META FIELDS */
+.meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1rem}
+.mf label{font-size:12px;font-weight:500;color:var(--tx2);margin-bottom:4px;display:block}
+.mf input{width:100%;padding:8px 10px;border-radius:var(--rds);border:.5px solid var(--bd2);background:var(--sf2);font-size:13px;color:var(--tx);outline:none;transition:border-color .15s;direction:rtl}
+.mf input:focus{border-color:var(--pr)}
+.mf.full{grid-column:1/-1}
+
+/* STATS */
+.sr{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:.9rem}
+.sc{background:var(--sf2);border-radius:var(--rds);border:.5px solid var(--bd);padding:10px;text-align:center}
+.sc .n{font-size:20px;font-weight:600;line-height:1}.sc .l{font-size:11px;color:var(--tx2);margin-top:3px}
+.sc.pr .n{color:var(--pr)}.sc.ac .n{color:var(--ac)}.sc.wn .n{color:var(--wn)}
+
+/* CHECKLIST */
+.cl{display:flex;flex-direction:column;gap:6px}
+.ci{display:flex;align-items:flex-start;gap:9px;padding:8px 11px;border-radius:var(--rds);background:var(--sf2);border:.5px solid var(--bd)}
+.ci i{font-size:16px;flex-shrink:0;margin-top:1px}
+.ci.dn i{color:var(--ac)}.ci.wn i{color:var(--wn)}.ci.pd i{color:var(--tx3)}.ci.rn i{color:var(--pr)}.ci.er i{color:var(--dn)}
+.ci p{font-size:13px;font-weight:500;margin-bottom:1px}.ci span{font-size:12px;color:var(--tx2)}
+
+/* PROGRESS */
+.prw{margin-top:.9rem}
+.prm{display:flex;justify-content:space-between;margin-bottom:4px}
+.prm span{font-size:12px;color:var(--tx2)}.prm strong{font-size:12px;font-weight:600}
+.prt{height:6px;background:var(--sf3);border-radius:99px;overflow:hidden}
+.prf{height:100%;background:var(--pr);border-radius:99px;transition:width .5s ease}
+
+/* OUTPUT */
+.out-wrap{background:var(--sf2);border:.5px solid var(--bd);border-radius:var(--rds);padding:1.25rem;font-size:13px;line-height:2;color:var(--tx);max-height:520px;overflow-y:auto;white-space:pre-wrap;font-family:'Segoe UI',Arial,sans-serif;direction:rtl;text-align:right}
+.out-wrap::-webkit-scrollbar{width:4px}.out-wrap::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:99px}
+.stream-cur::after{content:'▊';animation:bl .7s step-end infinite;color:var(--pr)}
+@keyframes bl{50%{opacity:0}}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* BUTTONS */
+.br{display:flex;align-items:center;justify-content:space-between;margin-top:1.1rem;flex-wrap:wrap;gap:7px}
+.bg{display:flex;gap:7px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:8px 16px;border-radius:var(--rds);font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;border:.5px solid var(--bd2);background:var(--sf);color:var(--tx);white-space:nowrap}
+.btn:hover{background:var(--sf2)}.btn:disabled{opacity:.4;cursor:not-allowed}.btn i{font-size:15px}
+.btn-p{background:var(--pr);border-color:var(--pr);color:#fff}.btn-p:hover:not(:disabled){background:var(--pr-m)}
+.btn-a{background:var(--ac);border-color:var(--ac);color:#fff}.btn-a:hover:not(:disabled){background:#0F6E56}
+.btn-d{background:var(--dn);border-color:var(--dn);color:#fff}
+
+/* KF SELECT */
+.sel-item{display:flex;align-items:center;gap:9px;padding:8px 12px;border-radius:var(--rds);border:.5px solid var(--bd);background:var(--sf2);cursor:pointer;transition:all .15s;margin-bottom:6px}
+.sel-item:hover{border-color:var(--bd2)}.sel-item.picked{border-color:var(--pr);background:var(--pr-l)}
+.sel-item i.chk{font-size:17px;flex-shrink:0;color:var(--tx3)}.sel-item.picked i.chk{color:var(--pr)}
+
+/* DIVIDER */
+.divider{display:flex;align-items:center;gap:10px;margin:.9rem 0;color:var(--tx3);font-size:12px}
+.divider::before,.divider::after{content:'';flex:1;height:.5px;background:var(--bd)}
+
+/* ADMIN */
+.adh{background:linear-gradient(135deg,#1D4E89,#0c3060);padding:1.75rem 1.5rem 1.25rem}
+.adh-in{max-width:820px;margin:0 auto}.adh h2{color:#fff;font-size:19px;font-weight:600;margin-bottom:3px}.adh p{color:rgba(255,255,255,.6);font-size:13px}
+.adtabs{background:var(--sf);border-bottom:.5px solid var(--bd);padding:0 1.5rem;display:flex;position:sticky;top:54px;z-index:50;overflow-x:auto}
+.at{display:flex;align-items:center;gap:5px;padding:11px 15px;font-size:13px;font-weight:500;cursor:pointer;color:var(--tx2);border-bottom:2px solid transparent;transition:all .15s;background:none;border-top:none;border-left:none;border-right:none;white-space:nowrap}
+.at:hover{color:var(--tx)}.at.on{color:var(--pr);border-bottom-color:var(--pr)}.at i{font-size:15px}
+.adc{max-width:820px;margin:0 auto;padding:1.25rem}
+.cat{border:.5px solid var(--bd);border-radius:var(--rd);background:var(--sf);overflow:hidden;margin-bottom:.9rem;box-shadow:var(--sh)}
+.cath{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--sf2);border-bottom:.5px solid var(--bd)}
+.catt{display:flex;align-items:center;gap:7px;font-size:14px;font-weight:600}
+.catb{padding:10px 14px}
+.cat-hint{font-size:11px;color:var(--tx2);margin-bottom:9px;line-height:1.5}
+
+/* LOGIN */
+.lo{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:999;backdrop-filter:blur(4px)}
+.lc{background:var(--sf);border-radius:var(--rd);padding:1.75rem;width:330px;box-shadow:0 8px 40px rgba(0,0,0,.3);border:.5px solid var(--bd)}
+.lic{width:52px;height:52px;background:var(--pr-l);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto .9rem}
+.lic i{font-size:26px;color:var(--pr)}
+.lc h2{text-align:center;font-size:16px;font-weight:600;margin-bottom:3px}
+.lc p{text-align:center;font-size:13px;color:var(--tx2);margin-bottom:1.25rem}
+.fg{margin-bottom:.9rem}
+.fl2{font-size:12px;font-weight:500;color:var(--tx2);margin-bottom:4px;display:block}
+.fi3{width:100%;padding:9px 12px;border-radius:var(--rds);border:.5px solid var(--bd2);background:var(--sf2);font-size:14px;color:var(--tx);outline:none;transition:border-color .15s;direction:ltr;text-align:left}
+.fi3:focus{border-color:var(--pr)}
+.lerr{font-size:12px;color:var(--dn);text-align:center;min-height:16px;margin-bottom:7px}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-brand">
+    <i class="ti ti-building-skyscraper"></i>
+    <div>
+      <h1>מערכת בדיקת תוכניות ניקוז</h1>
+      <small>סביבה ותכנון · מחוז חיפה · תמ"א 1 · <strong style="color:var(--pr)">v1.2</strong></small>
+    </div>
+  </div>
+  <div class="nav-links">
+    <button class="nb on" onclick="showPg('main')" id="nb-main"><i class="ti ti-home"></i> בדיקה</button>
+    <button class="nb" onclick="goAdmin()" id="nb-admin"><i class="ti ti-lock"></i> ניהול מפתח</button>
+  </div>
+</nav>
+
+<!-- ═══ MAIN ═══ -->
+<div class="pg vis" id="pg-main">
+<div class="wrap">
+
+  <!-- STEP 0: MODE SELECT -->
+  <div id="s-0">
+    <div class="card">
+      <div class="ch"><i class="ti ti-list-check"></i><div><div class="ct">בחירת סוג הבדיקה</div><div class="cs">בחר את סוג ההתייחסות שתפיק</div></div></div>
+      <div class="mode-bar">
+        <div class="mode-btn on" id="mode-first" onclick="setMode('first')">
+          <i class="ti ti-file-plus"></i>
+          התייחסות ראשונה
+          <span class="mode-sub">בדיקה ראשונית של נספח ניקוז —<br>טרם ניתנה התייחסות קודמת</span>
+        </div>
+        <div class="mode-btn" id="mode-update" onclick="setMode('update')">
+          <i class="ti ti-file-diff"></i>
+          בדיקת עדכון
+          <span class="mode-sub">התוכנית עודכנה בעקבות הערות —<br>יש התייחסות קודמת להשוואה</span>
+        </div>
+      </div>
+
+      <!-- META -->
+      <div class="divider">פרטי התוכנית</div>
+      <div class="meta-grid">
+        <div class="mf"><label>שם הפונה / לשכת תכנון</label><input type="text" id="meta-to" placeholder="לדוגמה: אורנית מורגנשטרן-הבר, לשכת תכנון מחוז חיפה"></div>
+        <div class="mf"><label>מספר תכנית</label><input type="text" id="meta-plan" placeholder="לדוגמה: 302-1352137"></div>
+        <div class="mf full"><label>שם המתחם / הפרויקט</label><input type="text" id="meta-name" placeholder="לדוגמה: מתחם העגור חדרה"></div>
+        <div class="mf"><label>תאריך ההתייחסות הקודמת</label><input type="text" id="meta-prev-date" placeholder="לדוגמה: 04.05.26" id="meta-prev-date"></div>
+        <div class="mf"><label>שם המתייחס/ת</label><input type="text" id="meta-reviewer" placeholder="לדוגמה: סיון קריספין" value="סיון קריספין"></div>
+      </div>
+
+      <div class="br" style="justify-content:flex-end">
+        <button class="btn btn-p" onclick="goStep(1)"><i class="ti ti-arrow-left"></i> המשך להעלאת קבצים</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 1: UPLOAD -->
+  <div id="s-1" style="display:none">
+    <!-- Stepper -->
+    <div class="stepper" id="stepper">
+      <div class="si on" id="si-0"><div class="sdot on" id="sd-0">1</div><div><div class="slbl">שלב 1</div><div class="sname">העלאת קבצים</div></div></div>
+      <div class="sconn"></div>
+      <div class="si" id="si-1"><div class="sdot" id="sd-1">2</div><div><div class="slbl">שלב 2</div><div class="sname">הנחיות</div></div></div>
+      <div class="sconn"></div>
+      <div class="si" id="si-2"><div class="sdot" id="sd-2">3</div><div><div class="slbl">שלב 3</div><div class="sname">בדיקת AI</div></div></div>
+      <div class="sconn"></div>
+      <div class="si" id="si-3"><div class="sdot" id="sd-3">4</div><div><div class="slbl">שלב 4</div><div class="sname">התייחסות</div></div></div>
+    </div>
+
+    <div class="card">
+      <div class="ch"><i class="ti ti-file-upload"></i><div><div class="ct">העלאת קבצי התוכנית</div><div class="cs" id="upload-subtitle">העלה את נספח הניקוז וניהול הנגר לבדיקה</div></div></div>
+
+      <div class="al al-i"><i class="ti ti-info-circle"></i><div>המערכת תעבור על <strong>כל הקבצים שהועלו</strong>. הבדיקה מנקודת מבט מהנדסת סביבה ותכנון, בהתאם לתמ"א 1 תיקון 8.</div></div>
+
+      <!-- Plans upload -->
+      <div style="font-size:12px;font-weight:600;color:var(--tx2);margin-bottom:6px">נספח ניקוז וניהול נגר לבדיקה</div>
+      <div class="upz"><input type="file" accept=".pdf" multiple onchange="addFiles(this.files,'plans')"><i class="ti ti-cloud-upload"></i><p>גרור קבצי PDF לכאן או לחץ לבחירה</p><span>תוכניות ניקוז — PDF</span></div>
+      <div class="fl" id="list-plans" style="margin-bottom:.9rem"></div>
+
+      <!-- Prev review upload (update mode only) -->
+      <div id="prev-upload-section" style="display:none">
+        <div class="divider">קובץ ההתייחסות הקודמת</div>
+        <div class="al al-w"><i class="ti ti-alert-triangle"></i><div>העלה את ההתייחסות הקודמת שנשלחה ללקוח. המערכת תשתמש בה כדי לבדוק מה תוקן ומה לא תוקן.</div></div>
+        <div class="upz"><input type="file" accept=".pdf,.docx" onchange="addFiles(this.files,'prev')"><i class="ti ti-file-diff"></i><p>גרור את קובץ ההתייחסות הקודמת</p><span>PDF או Word</span></div>
+        <div class="fl" id="list-prev" style="margin-bottom:.9rem"></div>
+      </div>
+
+      <div class="br">
+        <button class="btn" onclick="goStep(0)"><i class="ti ti-arrow-right"></i> חזרה</button>
+        <button class="btn btn-p" onclick="goStep(2)"><i class="ti ti-arrow-left"></i> המשך לבחירת הנחיות</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 2: SELECT GUIDELINES -->
+  <div id="s-2" style="display:none">
+    <div class="stepper" id="stepper2">
+      <div class="si dn" id="si2-0"><div class="sdot dn" id="sd2-0"><i class="ti ti-check" style="font-size:12px"></i></div><div><div class="slbl">שלב 1</div><div class="sname">העלאת קבצים</div></div></div>
+      <div class="sconn"></div>
+      <div class="si on" id="si2-1"><div class="sdot on" id="sd2-1">2</div><div><div class="slbl">שלב 2</div><div class="sname">הנחיות</div></div></div>
+      <div class="sconn"></div>
+      <div class="si" id="si2-2"><div class="sdot" id="sd2-2">3</div><div><div class="slbl">שלב 3</div><div class="sname">בדיקת AI</div></div></div>
+      <div class="sconn"></div>
+      <div class="si" id="si2-3"><div class="sdot" id="sd2-3">4</div><div><div class="slbl">שלב 4</div><div class="sname">התייחסות</div></div></div>
+    </div>
+
+    <div class="card">
+      <div class="ch"><i class="ti ti-book-2"></i><div><div class="ct">בחירת קבצי הנחיות לבדיקה</div><div class="cs">קבצי תמ"א 1 ומחשבון שישמשו בסיס להשוואה</div></div></div>
+      <div class="al al-w"><i class="ti ti-alert-triangle"></i><div>המערכת <strong>לא תמציא הערה</strong> ללא רפרנס מפורש בקבצים. יש לבחור לפחות את קבצי תמ"א 1.</div></div>
+      <div id="kf-area">
+        <div id="no-kf" style="text-align:center;padding:1.5rem;color:var(--tx2);font-size:13px"><i class="ti ti-lock" style="font-size:28px;display:block;margin-bottom:7px;opacity:.35"></i>אין קבצי מפתח. אנא פנה למנהל המערכת.</div>
+        <div id="kf-list" style="display:none"></div>
+      </div>
+      <div class="br">
+        <button class="btn" onclick="goStep(1)"><i class="ti ti-arrow-right"></i> חזרה</button>
+        <button class="btn btn-p" onclick="goStep(3)"><i class="ti ti-arrow-left"></i> התחל בדיקה</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 3: ANALYSIS -->
+  <div id="s-3" style="display:none">
+    <div class="stepper" id="stepper3">
+      <div class="si dn"><div class="sdot dn"><i class="ti ti-check" style="font-size:12px"></i></div><div><div class="slbl">שלב 1</div><div class="sname">קבצים</div></div></div>
+      <div class="sconn"></div>
+      <div class="si dn"><div class="sdot dn"><i class="ti ti-check" style="font-size:12px"></i></div><div><div class="slbl">שלב 2</div><div class="sname">הנחיות</div></div></div>
+      <div class="sconn"></div>
+      <div class="si on"><div class="sdot on">3</div><div><div class="slbl">שלב 3</div><div class="sname">בדיקת AI</div></div></div>
+      <div class="sconn"></div>
+      <div class="si"><div class="sdot">4</div><div><div class="slbl">שלב 4</div><div class="sname">התייחסות</div></div></div>
+    </div>
+
+    <div class="card">
+      <div class="ch"><i class="ti ti-brain"></i><div><div class="ct" id="analysis-title">בדיקה השוואתית — מנוע AI</div><div class="cs">ניתוח התוכנית מול הנחיות תמ"א 1 תיקון 8</div></div></div>
+      <div class="sr">
+        <div class="sc pr"><div class="n" id="st-plans">0</div><div class="l">קבצי תוכנית</div></div>
+        <div class="sc wn"><div class="n" id="st-kf">0</div><div class="l">קבצי הנחיה</div></div>
+        <div class="sc ac"><div class="n" id="st-mode">—</div><div class="l">סוג בדיקה</div></div>
+      </div>
+      <div class="cl" id="chk-list"></div>
+      <div class="prw">
+        <div class="prm"><span>התקדמות</span><strong id="pct">0%</strong></div>
+        <div class="prt"><div class="prf" id="prf" style="width:0%"></div></div>
+      </div>
+      <div class="br">
+        <button class="btn" onclick="goStep(2)"><i class="ti ti-arrow-right"></i> חזרה</button>
+        <button class="btn btn-p" id="run-btn" onclick="runAnalysis()"><i class="ti ti-player-play"></i> הפעל בדיקה</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 4: OUTPUT -->
+  <div id="s-4" style="display:none">
+    <div class="stepper">
+      <div class="si dn"><div class="sdot dn"><i class="ti ti-check" style="font-size:12px"></i></div><div><div class="slbl">שלב 1</div><div class="sname">קבצים</div></div></div>
+      <div class="sconn"></div>
+      <div class="si dn"><div class="sdot dn"><i class="ti ti-check" style="font-size:12px"></i></div><div><div class="slbl">שלב 2</div><div class="sname">הנחיות</div></div></div>
+      <div class="sconn"></div>
+      <div class="si dn"><div class="sdot dn"><i class="ti ti-check" style="font-size:12px"></i></div><div><div class="slbl">שלב 3</div><div class="sname">בדיקה</div></div></div>
+      <div class="sconn"></div>
+      <div class="si on"><div class="sdot on">4</div><div><div class="slbl">שלב 4</div><div class="sname">התייחסות</div></div></div>
+    </div>
+
+    <div class="card">
+      <div class="ch"><i class="ti ti-file-text"></i><div><div class="ct">קובץ ההתייחסות</div><div class="cs">ניסוח מקצועי · ניתן להעתיק ולהדביק ישירות למסמך Word</div></div></div>
+      <div class="al al-s"><i class="ti ti-circle-check"></i><div>הבדיקה הושלמה. ההתייחסות נכתבה בסגנון מכתבי ההתייחסות המקצועיים של לשכת תכנון מחוז חיפה.</div></div>
+      <div class="out-wrap" id="output-area"><span class="stream-cur"></span></div>
+      <div class="br">
+        <button class="btn" onclick="goStep(3)"><i class="ti ti-arrow-right"></i> חזרה</button>
+        <div class="bg">
+          <button class="btn" onclick="startNew()"><i class="ti ti-plus"></i> בדיקה חדשה</button>
+          <button class="btn btn-p" onclick="copyOut()"><i class="ti ti-copy"></i> העתק</button>
+          <button class="btn btn-a" onclick="dlOut()"><i class="ti ti-download"></i> הורד TXT</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- ═══ ADMIN ═══ -->
+<div class="pg" id="pg-admin">
+  <div class="adh"><div class="adh-in"><h2><i class="ti ti-lock" style="font-size:17px;vertical-align:-2px;margin-left:7px"></i>ניהול קבצי מפתח</h2><p>גישה מוגבלת · מנהלי מערכת בלבד</p></div></div>
+  <div class="adtabs">
+    <button class="at on" onclick="aTab('g')" id="at-g"><i class="ti ti-book-2"></i> תמ"א 1 והנחיות</button>
+    <button class="at" onclick="aTab('c')" id="at-c"><i class="ti ti-calculator"></i> מחשבונים</button>
+    <button class="at" onclick="aTab('e')" id="at-e"><i class="ti ti-files"></i> דוגמאות</button>
+    <button class="at" onclick="aTab('t')" id="at-t"><i class="ti ti-template"></i> תבנית סגנון</button>
+    <button class="at" onclick="aTab('s')" id="at-s"><i class="ti ti-settings"></i> הגדרות</button>
+  </div>
+  <div class="adc">
+    <div id="ac-g">
+      <div class="cat"><div class="cath"><div class="catt" style="color:var(--pr)"><i class="ti ti-book-2" style="color:var(--pr)"></i> תמ"א 1 והנחיות מקצועיות</div><button class="btn btn-p" style="padding:5px 11px;font-size:12px" onclick="trigUp('up-g')"><i class="ti ti-upload"></i> הוסף</button><input type="file" id="up-g" accept=".pdf,.docx" multiple style="display:none" onchange="addKF(this.files,'g')"></div><div class="catb"><div class="cat-hint">תמ"א 1 תיקון 7 ו-8, הנחיות כתיבה, דרישות רגולטוריות. קבצים אלה ישמשו בסיס לכל הבדיקות.</div><div class="fl" id="kfl-g"><div style="text-align:center;padding:.9rem;color:var(--tx2);font-size:12px">אין קבצים — לחץ "הוסף"</div></div></div></div>
+    </div>
+    <div id="ac-c" style="display:none">
+      <div class="cat"><div class="cath"><div class="catt" style="color:var(--pr)"><i class="ti ti-calculator" style="color:var(--pr)"></i> מחשבוני ניהול נגר</div><button class="btn btn-p" style="padding:5px 11px;font-size:12px" onclick="trigUp('up-c')"><i class="ti ti-upload"></i> הוסף</button><input type="file" id="up-c" accept=".pdf,.xlsx" multiple style="display:none" onchange="addKF(this.files,'c')"></div><div class="catb"><div class="cat-hint">מחשבוני ספיקות, מעטפת נפחים, יעדי ניהול נגר — PDF או Excel.</div><div class="fl" id="kfl-c"><div style="text-align:center;padding:.9rem;color:var(--tx2);font-size:12px">אין קבצים</div></div></div></div>
+    </div>
+    <div id="ac-e" style="display:none">
+      <div class="cat"><div class="cath"><div class="catt" style="color:var(--pr)"><i class="ti ti-files" style="color:var(--pr)"></i> נספחי ניקוז לדוגמה</div><button class="btn btn-p" style="padding:5px 11px;font-size:12px" onclick="trigUp('up-e')"><i class="ti ti-upload"></i> הוסף</button><input type="file" id="up-e" accept=".pdf" multiple style="display:none" onchange="addKF(this.files,'e')"></div><div class="catb"><div class="cat-hint">דוגמאות לנספחי ניקוז מוסדרים — לכיוון המנוע לרמת הבדיקה הנדרשת.</div><div class="fl" id="kfl-e"><div style="text-align:center;padding:.9rem;color:var(--tx2);font-size:12px">אין קבצים</div></div></div></div>
+    </div>
+    <div id="ac-t" style="display:none">
+      <div class="cat"><div class="cath"><div class="catt" style="color:var(--pr)"><i class="ti ti-template" style="color:var(--pr)"></i> תבנית סגנון ההתייחסות</div><button class="btn btn-p" style="padding:5px 11px;font-size:12px" onclick="trigUp('up-t')"><i class="ti ti-upload"></i> העלה</button><input type="file" id="up-t" accept=".pdf,.docx" style="display:none" onchange="addKF(this.files,'t')"></div><div class="catb"><div class="cat-hint">קבצי התייחסות לדוגמה — המנוע ישמור על אותו ניסוח, מבנה, ורמת פירוט.</div><div class="al al-w" style="margin-bottom:8px"><i class="ti ti-alert-triangle"></i><div>ניתן להעלות מספר קבצי דוגמה. קובץ חדש יתווסף לדוגמאות הקיימות.</div></div><div class="fl" id="kfl-t"><div style="text-align:center;padding:.9rem;color:var(--tx2);font-size:12px">אין תבנית</div></div></div></div>
+    </div>
+    <div id="ac-s" style="display:none">
+      <div class="card" style="margin-bottom:.5rem"><div class="ch"><i class="ti ti-api"></i><div><div class="ct">מפתח API של Anthropic</div></div></div><div class="al al-i"><i class="ti ti-info-circle"></i><div>המפתח נשמר בדפדפן בלבד ולא נשלח לשום מקום אחר.</div></div><div class="fg"><label class="fl2">מפתח API</label><input type="password" class="fi3" id="api-key-input" placeholder="sk-ant-..." dir="ltr"></div><div id="akmsg" style="font-size:12px;min-height:16px;margin-bottom:7px"></div><button class="btn btn-p" onclick="saveApiKey()"><i class="ti ti-check"></i> שמור מפתח</button></div>
+      <div class="card"><div class="ch"><i class="ti ti-key"></i><div><div class="ct">שינוי סיסמת מנהל</div></div></div><div class="al al-w"><i class="ti ti-alert-triangle"></i><div>הסיסמה נשמרת בדפדפן בלבד.</div></div><div class="fg"><label class="fl2">סיסמה נוכחית</label><input type="password" class="fi3" id="cp" placeholder="••••••••"></div><div class="fg"><label class="fl2">סיסמה חדשה</label><input type="password" class="fi3" id="np" placeholder="מינ׳ 6 תווים"></div><div class="fg"><label class="fl2">אימות</label><input type="password" class="fi3" id="cfp" placeholder="חזור על הסיסמה"></div><div id="pmsg" style="font-size:12px;min-height:16px;margin-bottom:7px"></div><button class="btn btn-p" onclick="chPass()"><i class="ti ti-check"></i> עדכן</button></div>
+      <div class="card" style="margin-top:.5rem"><div class="ch"><i class="ti ti-logout"></i><div><div class="ct">יציאה ממצב ניהול</div></div></div><button class="btn btn-d" onclick="logout()"><i class="ti ti-logout"></i> התנתק</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- LOGIN -->
+<div class="lo" id="lo" style="display:none">
+  <div class="lc">
+    <div class="lic"><i class="ti ti-lock"></i></div>
+    <h2>גישה מוגבלת</h2><p>הכנס סיסמת מנהל</p>
+    <div class="fg"><label class="fl2">סיסמה</label><input type="password" class="fi3" id="li" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <div class="lerr" id="lerr"></div>
+    <div style="display:flex;gap:7px"><button class="btn" style="flex:1" onclick="cancelLogin()">ביטול</button><button class="btn btn-p" style="flex:1" onclick="doLogin()"><i class="ti ti-lock-open"></i> כניסה</button></div>
+  </div>
+</div>
+
+<script>
+// ─── CONFIG ─────────────────────────────────────────
+const PASS_KEY='eng_pass_v2', KF_KEY='eng_kf_v2', DEF_PASS='admin1234';
+const API_KEY_STORE='eng_api_key_v1';
+let API_KEY=localStorage.getItem(API_KEY_STORE)||'';
+const API_URL='https://api.anthropic.com/v1/messages', MODEL='claude-sonnet-4-20250514';
+
+// ─── STATE ───────────────────────────────────────────
+let authed=false, curMode='first', curMainStep=0, outputText='';
+let planFiles=[], prevFile=null;
+let kfMeta={g:[],c:[],e:[],t:[]}, kfDataMap={};
+let selKF=new Set();
+let db=null;
+
+// ─── INDEXEDDB ────────────────────────────────────────
+function openDB(){
+  return new Promise((res,rej)=>{
+    const req=indexedDB.open('eng_kf_db',1);
+    req.onupgradeneeded=e=>{e.target.result.createObjectStore('files',{keyPath:'id'});};
+    req.onsuccess=e=>{res(e.target.result);};
+    req.onerror=e=>{rej(e);};
+  });
+}
+function dbPut(id,data){
+  return new Promise((res,rej)=>{
+    if(!db){res();return;}
+    const tx=db.transaction('files','readwrite');
+    tx.objectStore('files').put({id:String(id),data});
+    tx.oncomplete=()=>res();tx.onerror=e=>rej(e);
+  });
+}
+function dbGet(id){
+  return new Promise((res,rej)=>{
+    if(!db){res(null);return;}
+    const tx=db.transaction('files','readonly');
+    const req=tx.objectStore('files').get(String(id));
+    req.onsuccess=e=>res(e.target.result?.data||null);
+    req.onerror=e=>rej(e);
+  });
+}
+function dbDel(id){
+  return new Promise((res,rej)=>{
+    if(!db){res();return;}
+    const tx=db.transaction('files','readwrite');
+    tx.objectStore('files').delete(String(id));
+    tx.oncomplete=()=>res();tx.onerror=e=>rej(e);
+  });
+}
+function dbGetAll(){
+  return new Promise((res,rej)=>{
+    if(!db){res({});return;}
+    const tx=db.transaction('files','readonly');
+    const req=tx.objectStore('files').getAll();
+    req.onsuccess=e=>{
+      const map={};
+      e.target.result.forEach(r=>{map[r.id]=r.data;});
+      res(map);
+    };
+    req.onerror=e=>rej(e);
+  });
+}
+
+// ─── INIT ─────────────────────────────────────────────
+(async function(){
+  if(!localStorage.getItem(PASS_KEY)) localStorage.setItem(PASS_KEY,DEF_PASS);
+  const s=localStorage.getItem(KF_KEY);
+  if(s) try{kfMeta=JSON.parse(s);}catch(e){}
+  try{
+    db=await openDB();
+    kfDataMap=await dbGetAll();
+  }catch(e){console.warn('IndexedDB error',e);}
+  renderAllAdmin(); renderKFList();
+  // Load API key into input if exists
+  const savedKey=localStorage.getItem(API_KEY_STORE)||'';
+  if(savedKey) API_KEY=savedKey;
+  const akInput=document.getElementById('api-key-input');
+  if(akInput&&savedKey) akInput.value=savedKey;
+})();
+
+// ─── NAV ─────────────────────────────────────────────
+function showPg(n){
+  document.querySelectorAll('.pg').forEach(p=>p.classList.remove('vis'));
+  document.getElementById('pg-'+n).classList.add('vis');
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
+  document.getElementById('nb-'+n).classList.add('on');
+}
+function goAdmin(){
+  if(authed){showPg('admin');return;}
+  document.getElementById('lo').style.display='flex';
+  document.getElementById('li').value='';document.getElementById('lerr').textContent='';
+  setTimeout(()=>document.getElementById('li').focus(),100);
+}
+function cancelLogin(){document.getElementById('lo').style.display='none';}
+function doLogin(){
+  const v=document.getElementById('li').value,s=localStorage.getItem(PASS_KEY)||DEF_PASS;
+  if(v===s){authed=true;document.getElementById('lo').style.display='none';showPg('admin');renderAllAdmin();}
+  else{document.getElementById('lerr').textContent='סיסמה שגויה';document.getElementById('li').value='';document.getElementById('li').focus();}
+}
+function logout(){authed=false;showPg('main');}
+function saveApiKey(){
+  const v=document.getElementById('api-key-input').value.trim();
+  const msg=document.getElementById('akmsg');
+  if(!v.startsWith('sk-')){msg.style.color='#A32D2D';msg.textContent='מפתח לא תקין — חייב להתחיל ב-sk-';return;}
+  localStorage.setItem(API_KEY_STORE,v);
+  API_KEY=v;
+  msg.style.color='#1D9E75';msg.textContent='✓ מפתח נשמר';
+  setTimeout(()=>msg.textContent='',3000);
+}
+function chPass(){
+  const c=document.getElementById('cp').value,n=document.getElementById('np').value,f=document.getElementById('cfp').value;
+  const msg=document.getElementById('pmsg'),s=localStorage.getItem(PASS_KEY)||DEF_PASS;
+  if(c!==s){msg.style.color='#A32D2D';msg.textContent='הסיסמה הנוכחית שגויה';return;}
+  if(n.length<6){msg.style.color='#A32D2D';msg.textContent='סיסמה קצרה מדי';return;}
+  if(n!==f){msg.style.color='#A32D2D';msg.textContent='הסיסמאות אינן תואמות';return;}
+  localStorage.setItem(PASS_KEY,n);msg.style.color='#1D9E75';msg.textContent='✓ עודכן';
+  ['cp','np','cfp'].forEach(id=>document.getElementById(id).value='');
+}
+
+// ─── MODE ─────────────────────────────────────────────
+function setMode(m){
+  curMode=m;
+  document.getElementById('mode-first').classList.toggle('on',m==='first');
+  document.getElementById('mode-update').classList.toggle('on',m==='update');
+  document.getElementById('prev-upload-section').style.display=m==='update'?'block':'none';
+  document.getElementById('upload-subtitle').textContent=m==='first'
+    ?'העלה את נספח הניקוז וניהול הנגר לבדיקה'
+    :'העלה את נספח הניקוז המעודכן + ההתייחסות הקודמת';
+  // show/hide prev date field
+  document.getElementById('meta-prev-date').closest('.mf').style.display=m==='update'?'block':'none';
+}
+
+// ─── MAIN STEPS ──────────────────────────────────────
+function goStep(n){
+  // hide all step panels
+  [0,1,2,3,4].forEach(i=>{
+    const el=document.getElementById('s-'+i);
+    if(el) el.style.display= i===n?'block':'none';
+  });
+  curMainStep=n;
+  if(n===3){
+    // prep analysis step
+    const allKF=[...kfMeta.g,...kfMeta.c,...kfMeta.e,...kfMeta.t];
+    const selAll=selKF.size>0?allKF.filter(f=>selKF.has(f.id)):allKF;
+    document.getElementById('st-plans').textContent=planFiles.length+(prevFile?'+1':'');
+    document.getElementById('st-kf').textContent=selAll.length;
+    document.getElementById('st-mode').textContent=curMode==='first'?'ראשונה':'עדכון';
+    document.getElementById('analysis-title').textContent=curMode==='first'?'בדיקה ראשונית — מנוע AI':'בדיקת עדכון — מנוע AI';
+    buildChecklist();
+    document.getElementById('run-btn').disabled=false;
+    document.getElementById('run-btn').innerHTML='<i class="ti ti-player-play"></i> הפעל בדיקה';
+    document.getElementById('prf').style.width='0%';
+    document.getElementById('pct').textContent='0%';
+  }
+}
+
+// ─── FILES ───────────────────────────────────────────
+function addFiles(files,type){
+  if(type==='plans'){
+    for(const f of files){
+      if(planFiles.length>=5){alert('עד 5 קבצים');break;}
+      if(planFiles.find(p=>p.name===f.name)) continue;
+      readB64(f).then(b64=>{planFiles.push({name:f.name,size:f.size,b64,mime:f.type});renderFileList('list-plans',planFiles,'plans');});
+    }
+  } else if(type==='prev'){
+    readB64(files[0]).then(b64=>{prevFile={name:files[0].name,size:files[0].size,b64,mime:files[0].type};renderFileList('list-prev',[prevFile],'prev');});
+  }
+}
+function removeFile(type,name){
+  if(type==='plans') planFiles=planFiles.filter(f=>f.name!==name);
+  else prevFile=null;
+  renderFileList(type==='plans'?'list-plans':'list-prev',type==='plans'?planFiles:prevFile?[prevFile]:[],'plans');
+}
+function renderFileList(elId,files,type){
+  const el=document.getElementById(elId);
+  if(!files||!files.length){el.innerHTML='';return;}
+  el.innerHTML=files.map(f=>`<div class="fi"><i class="ti ti-file-type-pdf ic"></i><div class="fm"><div class="fn">${f.name}</div><div class="fi2">${fmtSz(f.size)}</div></div><span class="badge b-ok"><i class="ti ti-check" style="font-size:10px"></i> נטען</span><button class="frm" onclick="removeFile('${type}','${f.name.replace(/'/g,"\\'")}')"><i class="ti ti-x"></i></button></div>`).join('');
+}
+
+// ─── KF ──────────────────────────────────────────────
+const catL={g:'הנחיות',c:'מחשבון',e:'דוגמה',t:'תבנית'};
+const catB={g:'b-key',c:'b-pr',e:'b-ok',t:'b-pr'};
+
+async function addKF(files,cat){
+  for(const f of files){
+    const id=Date.now()+Math.random();
+    try{
+      const b64=await readB64(f);
+      kfMeta[cat].push({id,name:f.name,size:f.size,cat});
+      kfDataMap[id]={name:f.name,b64,mime:f.type};
+      await dbPut(id,{name:f.name,b64,mime:f.type});
+    }catch(e){console.error('שגיאה בהעלאת קובץ',f.name,e);}
+  }
+  localStorage.setItem(KF_KEY,JSON.stringify(kfMeta));
+  renderAllAdmin(); renderKFList();
+}
+async function removeKF(cat,id){
+  kfMeta[cat]=kfMeta[cat].filter(f=>f.id!==id);
+  delete kfDataMap[id]; selKF.delete(parseFloat(id));
+  localStorage.setItem(KF_KEY,JSON.stringify(kfMeta));
+  await dbDel(id);
+  renderAllAdmin(); renderKFList();
+}
+function trigUp(id){document.getElementById(id).click();}
+
+function renderKFBlock(elId,cat){
+  const el=document.getElementById(elId);if(!el)return;
+  const items=kfMeta[cat]||[];
+  if(!items.length){el.innerHTML=`<div style="text-align:center;padding:.9rem;color:var(--tx2);font-size:12px">אין קבצים</div>`;return;}
+  el.innerHTML=items.map(f=>`<div class="fi"><i class="ti ti-file-type-pdf ic"></i><div class="fm"><div class="fn">${f.name}</div><div class="fi2">${fmtSz(f.size)} · ${catL[f.cat]}</div></div><span class="badge ${catB[f.cat]}">${catL[f.cat]}</span><button class="frm" onclick="removeKF('${f.cat}',${f.id})"><i class="ti ti-trash"></i></button></div>`).join('');
+}
+function renderAllAdmin(){
+  ['g','c','e','t'].forEach(c=>renderKFBlock('kfl-'+c,c));
+}
+
+function renderKFList(){
+  const all=[...kfMeta.g,...kfMeta.c,...kfMeta.e,...kfMeta.t];
+  const noKF=document.getElementById('no-kf'), lst=document.getElementById('kf-list');
+  if(!all.length){if(noKF)noKF.style.display='block';if(lst)lst.style.display='none';return;}
+  if(noKF)noKF.style.display='none';
+  if(lst){lst.style.display='block';
+    lst.innerHTML=all.map(f=>{
+      const p=selKF.has(f.id);
+      return `<div class="sel-item${p?' picked':''}" onclick="toggleKF(${f.id})"><i class="ti ${p?'ti-circle-check':'ti-circle'} chk"></i><div class="fm"><div class="fn">${f.name}</div><div class="fi2">${catL[f.cat]}</div></div><span class="badge ${catB[f.cat]}">${catL[f.cat]}</span></div>`;
+    }).join('');
+  }
+}
+function toggleKF(id){if(selKF.has(id))selKF.delete(id);else selKF.add(id);renderKFList();}
+
+function aTab(n){
+  ['g','c','e','t','s'].forEach(t=>{
+    document.getElementById('ac-'+t).style.display=t===n?'block':'none';
+    document.getElementById('at-'+t).classList.toggle('on',t===n);
+  });
+}
+
+// ─── CHECKLIST ───────────────────────────────────────
+const checkLabelsFirst=[
+  'קריאת נספח הניקוז וניהול הנגר',
+  'טעינת הנחיות תמ"א 1 תיקון 8',
+  'בדיקת תקציר ויעדי ניהול נגר',
+  'בדיקת ספיקות, מעטפת נפחים, ניקוז',
+  'בדיקת תשריט ניקוז והוראות התכנית',
+  'ניסוח מסמך ההתייחסות'
+];
+const checkLabelsUpdate=[
+  'קריאת נספח הניקוז המעודכן',
+  'קריאת ההתייחסות הקודמת',
+  'השוואה — מה תוקן / מה לא תוקן',
+  'בדיקת הערות שטרם טופלו',
+  'בדיקת עמידה בדרישות תמ"א 1',
+  'ניסוח מסמך ההתייחסות המעודכן'
+];
+function buildChecklist(){
+  const labels=curMode==='first'?checkLabelsFirst:checkLabelsUpdate;
+  const el=document.getElementById('chk-list');
+  el.innerHTML=labels.map((l,i)=>`<div class="ci pd" id="chk-${i}"><i class="ti ti-circle"></i><div><p>${l}</p><span>ממתין</span></div></div>`).join('');
+}
+function setChk(i,type,sub){
+  const icons={dn:'ti-circle-check',wn:'ti-alert-triangle',rn:'ti-loader-2',pd:'ti-circle',er:'ti-circle-x'};
+  const labels=curMode==='first'?checkLabelsFirst:checkLabelsUpdate;
+  const el=document.getElementById('chk-'+i);if(!el)return;
+  el.className='ci '+type;
+  const spin=type==='rn'?' style="animation:sp .7s linear infinite"':'';
+  el.innerHTML=`<i class="ti ${icons[type]||'ti-circle'}"${spin}></i><div><p>${labels[i]}</p><span>${sub}</span></div>`;
+}
+function setPct(p){document.getElementById('prf').style.width=p+'%';document.getElementById('pct').textContent=p+'%';}
+
+// ─── ANALYSIS ────────────────────────────────────────
+async function runAnalysis(){
+  if(!planFiles.length){alert('יש להעלות לפחות קובץ תוכנית אחד');return;}
+  if(curMode==='update'&&!prevFile){alert('יש להעלות את ההתייחסות הקודמת לבדיקת עדכון');return;}
+
+  const btn=document.getElementById('run-btn');
+  btn.disabled=true;
+  btn.innerHTML='<i class="ti ti-loader-2" style="animation:sp .7s linear infinite"></i> מנתח...';
+
+  // Gather KF
+  const allKF=[...kfMeta.g,...kfMeta.c,...kfMeta.e,...kfMeta.t];
+  const selMeta=selKF.size>0?allKF.filter(f=>selKF.has(f.id)):allKF;
+
+  // Meta
+  const metaTo=document.getElementById('meta-to').value||'לשכת תכנון';
+  const metaPlan=document.getElementById('meta-plan').value||'';
+  const metaName=document.getElementById('meta-name').value||'';
+  const metaReviewer=document.getElementById('meta-reviewer').value||'סיון קריספין';
+  const metaPrevDate=document.getElementById('meta-prev-date').value||'';
+  const today=new Date();
+  const todayStr=`${String(today.getDate()).padStart(2,'0')}.${String(today.getMonth()+1).padStart(2,'0')}.${String(today.getFullYear()).slice(-2)}`;
+
+  // Progress simulation
+  setChk(0,'rn','קורא את קבצי התוכנית...');setPct(5);await delay(350);
+  setChk(0,'dn',`${planFiles.length} קבצים נסרקו`);
+  setChk(1,'rn','טוען הנחיות...');setPct(15);await delay(300);
+  setChk(1,'dn',`${selMeta.length} מסמכי הנחיה`);
+  setChk(2,'rn','בודק יעדים ותקציר...');setPct(28);
+
+  // Build content
+  const msgContent=[];
+
+  // Plans
+  for(const pf of planFiles){
+    msgContent.push({type:'text',text:`\n=== קובץ תוכנית לבדיקה: ${pf.name} ===`});
+    if(pf.b64&&pf.mime==='application/pdf'){
+      msgContent.push({type:'document',source:{type:'base64',media_type:'application/pdf',data:pf.b64}});
+    }
+  }
+
+  // Prev review (update mode)
+  if(curMode==='update'&&prevFile&&prevFile.b64){
+    msgContent.push({type:'text',text:`\n=== ההתייחסות הקודמת (${metaPrevDate}) ===`});
+    if(prevFile.mime==='application/pdf'){
+      msgContent.push({type:'document',source:{type:'base64',media_type:'application/pdf',data:prevFile.b64}});
+    } else {
+      msgContent.push({type:'text',text:`[קובץ ההתייחסות הקודמת: ${prevFile.name}]`});
+    }
+  }
+
+  // KF files (session or localStorage)
+  if(Object.keys(kfDataMap).length>0){
+    const selIds=selKF.size>0?selKF:new Set(allKF.map(f=>f.id));
+    msgContent.push({type:'text',text:'\n=== קבצי הנחיות ===\n'});
+    for(const [id,fileData] of Object.entries(kfDataMap)){
+      if(!selIds.has(parseFloat(id))) continue;
+      try{
+        const b64=fileData.b64;
+        const mime=fileData.mime||'application/pdf';
+        const name=fileData.name||id;
+        if(name.endsWith('.pdf')||mime==='application/pdf'){
+          msgContent.push({type:'text',text:`הנחיה: ${name}`});
+          msgContent.push({type:'document',source:{type:'base64',media_type:'application/pdf',data:b64}});
+        }
+      }catch(e){msgContent.push({type:'text',text:`[${fileData.name||id} — לא נטען]`});}
+    }
+  } else if(selMeta.length>0){
+    msgContent.push({type:'text',text:`\n[קבצי מפתח שנבחרו: ${selMeta.map(f=>f.name).join(', ')}]`});
+  }
+
+  // System prompt — Sivon Krispin style
+  const isUpdate=curMode==='update';
+  const systemPrompt=`אתה מהנדסת סביבה ותכנון הבודקת נספחי ניקוז וניהול נגר בתכניות בינוי עבור לשכת תכנון מחוז חיפה.
+כתיבי את ההתייחסות בסגנון המדויק של מכתבי ההתייחסות המקצועיים הנהוגים — בדיוק כפי שמפורט להלן.
+
+=== מבנה המסמך החובה ===
+השתמשי בדיוק במבנה הבא:
+
+${todayStr}
+
+לכבוד
+${metaTo}
+
+הנדון – התייחסות לנושא הניקוז – תכנית מס' ${metaPlan} – ${metaName}${isUpdate?' - עדכון':''}
+
+מסמכי התכנית הועברו לעיוני, להלן התייחסותי${isUpdate?`, בהמשך להתייחסות קודמת מתאריך ${metaPrevDate} -`:' -'}
+
+[פרקים לפי הסדר הבא — כלול רק פרקים רלוונטיים לתוכן שנמצא:]
+
+כללי
+[הערות על היבטים כלליים — נחלים, רשויות ניקוז, פנייה לגורמים חיצוניים]
+
+פרשה טכנית
+[הערות טכניות — תקציר, ספיקות, ניהול נגר, מחשבון, מעטפת נפחים, אמצעים, מוצא]
+
+תשריט ניקוז
+[הערות על תשריט — מה חסר, מה לא מסומן, אי-התאמות]
+
+הוראות התכנית
+[הערות על הוראות — מה יש לציין, מה חסר]
+
+                                                                                                                  בברכה,
+                                                                                                                         ${metaReviewer}
+
+=== כללי ניסוח ===
+• כל הערה — שורה אחת המתחילה ב"- " (מקף ורווח)
+• ניסוח ישיר ומקצועי. לא "נראה כי" — אמרי "לא ברור" / "יש ל" / "מוצג" / "לא מוצג"
+• ציני מספרים קונקרטיים (נפחים, ספיקות, קוטרים) כשהם מופיעים בתוכנית
+• הפני לסעיפים, טבלאות, נספחים ספציפיים בתוכנית
+• הפני לתמ"א 1 תיקון 8 כבסיס רגולטורי
+• אל תוסיפי הסברים מיותרים — ענייני בלבד
+
+${isUpdate?`=== עדכון — כללי מעקב ===
+• כל הערה מהגרסה הקודמת חייבת להופיע במסמך
+• לאחר כל הערה — הוסיפי " – [סטטוס]":
+  - " - תוקן" — הנושא טופל
+  - " – תוקן חלקית" — ותפרטי מה נותר
+  - " – לא תוקן" — ותפרטי מה נדרש
+• הוסיפי הערות חדשות שעלו מהעדכון (ללא סטטוס, כהערה חדשה רגילה)
+• שמרי על הסדר המקורי של ההערות מהגרסה הקודמת
+
+`:''
+}=== הגבלות קריטיות ===
+• אל תמציאי הערה ללא רפרנס מפורש בתוכנית שהועלתה
+• אם נושא לא קיים בתוכנית — אל תכתבי עליו
+• רק מה שנמצא בפועל בקבצים שהועלו`;
+
+  const userPrompt=curMode==='first'
+    ?`בצעי בדיקה מקצועית של נספח הניקוז שהועלה. עברי על כל הפרקים: תקציר, ספיקות, ניהול נגר, מחשבון, מעטפת נפחים, אמצעי ניהול נגר, מוצא, תשריט, הוראות. הפיקי התייחסות מלאה בסגנון הקבוע.`
+    :`השווי בין ההתייחסות הקודמת לנספח המעודכן. עברי על כל הערה מהגרסה הקודמת וציינו אם תוקן / לא תוקן / תוקן חלקית. הוסיפי הערות חדשות שעלו מהעדכון.`;
+
+  msgContent.push({type:'text',text:userPrompt});
+
+  // Progress
+  setChk(2,'rn','בודק ספיקות וחישובים...');setPct(42);
+
+  try{
+    const resp=await fetch(API_URL,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':API_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:MODEL,max_tokens:4000,stream:true,system:systemPrompt,messages:[{role:'user',content:msgContent}]})
+    });
+    if(!resp.ok){const e=await resp.json();throw new Error(e.error?.message||'שגיאת API');}
+
+    setChk(2,'dn','בדיקת יעדים הושלמה');
+    setChk(3,'rn','בודק ספיקות ותשריט...');setPct(58);
+
+    // Stream to output
+    goStep(4);
+    const outEl=document.getElementById('output-area');
+    outEl.innerHTML='<span class="stream-cur"></span>';
+    outputText='';
+
+    const reader=resp.body.getReader(),dec=new TextDecoder();
+    let buf='';
+    while(true){
+      const{done,value}=await reader.read();if(done)break;
+      buf+=dec.decode(value,{stream:true});
+      const lines=buf.split('\n');buf=lines.pop();
+      for(const line of lines){
+        if(!line.startsWith('data:'))continue;
+        const d=line.slice(5).trim();if(d==='[DONE]')break;
+        try{const j=JSON.parse(d);if(j.type==='content_block_delta'&&j.delta?.text){outputText+=j.delta.text;outEl.innerHTML=outputText+'<span class="stream-cur"></span>';outEl.scrollTop=outEl.scrollHeight;}}catch(e){}
+      }
+    }
+    outEl.innerHTML=outputText;
+    setChk(3,'dn','הבדיקה הושלמה');setChk(4,'dn','עמידה בגלופת תמ"א 1/8 — נבדקה');setChk(5,'dn','מסמך ההתייחסות הופק');setPct(100);
+
+  }catch(e){
+    setChk(5,'er','שגיאה: '+e.message);
+    goStep(4);
+    document.getElementById('output-area').innerHTML=`שגיאה: ${e.message}`;
+  }
+  btn.disabled=false;btn.innerHTML='<i class="ti ti-refresh"></i> הפעל שוב';
+}
+
+// ─── OUTPUT ACTIONS ──────────────────────────────────
+function copyOut(){
+  navigator.clipboard.writeText(outputText).then(()=>{
+    const b=event.target.closest('.btn'),o=b.innerHTML;
+    b.innerHTML='<i class="ti ti-check"></i> הועתק';setTimeout(()=>b.innerHTML=o,2000);
+  });
+}
+function dlOut(){
+  const plan=document.getElementById('meta-plan').value||'התייחסות';
+  const blob=new Blob([outputText],{type:'text/plain;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download=`התייחסות_ניקוז_${plan}_${new Date().toISOString().slice(0,10)}.txt`;a.click();
+}
+function startNew(){
+  planFiles=[];prevFile=null;outputText='';selKF.clear();
+  ['list-plans','list-prev'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML='';});
+  ['meta-to','meta-plan','meta-name','meta-prev-date'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  setMode('first');goStep(0);
+}
+
+// ─── UTILS ───────────────────────────────────────────
+function readB64(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(',')[1]);r.onerror=rej;r.readAsDataURL(file);});}
+function fmtSz(b){if(b<1024)return b+' B';if(b<1048576)return (b/1024).toFixed(1)+' KB';return (b/1048576).toFixed(1)+' MB';}
+function delay(ms){return new Promise(r=>setTimeout(r,ms));}
+
+// init mode display
+setMode('first');
+</script>
+</body>
+</html>
