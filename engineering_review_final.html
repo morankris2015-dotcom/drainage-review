@@ -517,7 +517,7 @@ function renderKFBlock(elId,cat){
   const el=document.getElementById(elId); if(!el) return;
   const items=kfMeta[cat]||[];
   if(!items.length){ el.innerHTML=''; return; }
-  el.innerHTML=items.map(f=>`<div class="fi"><i class="ti ti-file-type-pdf ic"></i><div class="fm"><div class="fn">${f.name}</div><div class="fi2">${fmtSz(f.size)} · ${catL[f.cat]}</div></div><span class="badge ${catB[f.cat]}">${catL[f.cat]}</span><button class="frm" onclick="removeKF('${f.cat}',${f.id})"><i class="ti ti-trash"></i></button></div>`).join('');
+  el.innerHTML=items.map(f=>`<div class="fi"><i class="ti ti-file-type-pdf ic"></i><div class="fm"><div class="fn">${f.name}</div><div class="fi2">${fmtSz(f.size)}</div></div><span class="badge b-ok"><i class="ti ti-check" style="font-size:10px"></i> נטען</span><button class="frm" onclick="removeKF('${f.cat}',${f.id})"><i class="ti ti-trash"></i></button></div>`).join('');
 }
 function renderAllKF(){ ['g','c','e','t'].forEach(c=>renderKFBlock('kfl-'+c,c)); }
 
