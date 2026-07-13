@@ -472,6 +472,7 @@ function setMode(m){
 
 function goStep(n){
   [0,1,2,3,4].forEach(i=>{ const el=document.getElementById('s-'+i); if(el) el.style.display=i===n?'block':'none'; });
+  if(n===2){ renderKFList(); }
   if(n===3){
     const allKF=[...kfMeta.g,...kfMeta.c,...kfMeta.e,...kfMeta.t];
     const sel=selKF.size>0?allKF.filter(f=>selKF.has(f.id)):allKF;
