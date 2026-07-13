@@ -52,7 +52,11 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--sf2);color:var(--t
 .al-i{background:var(--pr-l);border:.5px solid rgba(29,78,137,.25)}.al-i i{color:var(--pr)}
 .al-w{background:var(--wn-l);border:.5px solid rgba(186,117,23,.25)}.al-w i{color:var(--wn)}
 .al-s{background:var(--ac-l);border:.5px solid rgba(29,158,117,.25)}.al-s i{color:var(--ac)}
-.upz{border:2px dashed var(--bd2);border-radius:var(--rd);padding:1.4rem;text-align:center;cursor:pointer;transition:all .15s;background:var(--sf2);margin-bottom:.9rem;position:relative}
+/* ===== FIX: .upz is used both as <div> (block by default) AND as <label> (inline by
+   default) in the admin page. Without an explicit display, the <label> variant stayed
+   inline, so its padding overlapped the text above/below it instead of pushing a full
+   block-level box. Adding display:block fixes it for both usages. ===== */
+.upz{display:block;width:100%;border:2px dashed var(--bd2);border-radius:var(--rd);padding:1.4rem;text-align:center;cursor:pointer;transition:all .15s;background:var(--sf2);margin-bottom:.9rem;position:relative}
 .upz:hover{border-color:var(--pr);background:var(--pr-l)}
 .upz input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
 .upz i{font-size:28px;color:var(--tx2);margin-bottom:6px;display:block}
