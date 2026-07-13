@@ -377,6 +377,7 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--sf2);color:var(--t
     </div>
     <div id="ac-s" style="display:none">
       <div class="card"><div class="ch"><i class="ti ti-key"></i><div><div class="ct">שינוי סיסמת מנהל</div></div></div><div class="al al-w"><i class="ti ti-alert-triangle"></i><div>הסיסמה נשמרת בדפדפן בלבד.</div></div><div class="fg"><label class="fl2">סיסמה נוכחית</label><input type="password" class="fi3" id="cp" placeholder="••••••••"></div><div class="fg"><label class="fl2">סיסמה חדשה</label><input type="password" class="fi3" id="np" placeholder="מינ׳ 6 תווים"></div><div class="fg"><label class="fl2">אימות</label><input type="password" class="fi3" id="cfp" placeholder="חזור על הסיסמה"></div><div id="pmsg" style="font-size:12px;min-height:16px;margin-bottom:7px"></div><button class="btn btn-p" onclick="chPass()"><i class="ti ti-check"></i> עדכן</button></div>
+      <div class="card" style="margin-top:.5rem"><div class="ch"><i class="ti ti-trash"></i><div><div class="ct">ניקוי קבצי מפתח</div><div class="cs">מחיקת כל הקבצים השמורים</div></div></div><button class="btn btn-d" onclick="if(confirm('למחוק את כל קבצי המפתח?')){kfMeta={g:[],c:[],e:[],t:[]};kfDataMap={};localStorage.setItem(KF_KEY,JSON.stringify(kfMeta));renderAllAdmin();renderKFList();alert('נוקה');}"><i class="ti ti-trash"></i> נקה הכל</button></div>
       <div class="card" style="margin-top:.5rem"><div class="ch"><i class="ti ti-logout"></i><div><div class="ct">יציאה ממצב ניהול</div></div></div><button class="btn btn-d" onclick="logout()"><i class="ti ti-logout"></i> התנתק</button></div>
     </div>
   </div>
@@ -395,7 +396,7 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--sf2);color:var(--t
 
 <script>
 // ─── CONFIG ─────────────────────────────────────────
-const PASS_KEY='eng_pass_v2', KF_KEY='eng_kf_v2', DEF_PASS='admin1234';
+const PASS_KEY='eng_pass_v3', KF_KEY='eng_kf_v3', DEF_PASS='admin1234';
 const API_KEY='הכנס-כאן-את-המפתח-שלך'; // ← החלף את הטקסט הזה במפתח שלך
 const API_URL='https://api.anthropic.com/v1/messages', MODEL='claude-sonnet-4-20250514';
 
@@ -509,14 +510,16 @@ const catB={g:'b-key',c:'b-pr',e:'b-ok',t:'b-pr'};
 
 
 function addKF(files,cat){
-  // רשום את הקבצים מיד — ללא עיבוד. הכל קורה בזמן הבדיקה
-  for(const f of files){
-    const id=Date.now()+Math.random();
+  if(!files||!files.length) return;
+  for(let i=0;i<files.length;i++){
+    const f=files[i];
+    const id=Date.now()+i;
     kfMeta[cat].push({id,name:f.name,size:f.size,cat});
     kfDataMap[id]=f;
   }
-  localStorage.setItem(KF_KEY,JSON.stringify(kfMeta));
-  renderAllAdmin(); renderKFList();
+  try{ localStorage.setItem(KF_KEY,JSON.stringify(kfMeta)); }catch(e){}
+  renderAllAdmin();
+  renderKFList();
 }
 function removeKF(cat,id){
   kfMeta[cat]=kfMeta[cat].filter(f=>f.id!==id);
