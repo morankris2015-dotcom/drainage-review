@@ -454,6 +454,9 @@ function chPass(){
 }
 function clearAllKF(){
   if(!confirm('למחוק את כל קבצי המפתח?')) return;
+  // מחק גם את ה-base64 השמורים
+  const allKF=[...kfMeta.g,...kfMeta.c,...kfMeta.e,...kfMeta.t];
+  allKF.forEach(f=>localStorage.removeItem('kf_b64_'+f.id));
   kfMeta={g:[],c:[],e:[],t:[]}; kfDataMap={};
   localStorage.setItem(KF_KEY,JSON.stringify(kfMeta));
   renderAllKF(); renderKFList();
@@ -511,6 +514,12 @@ function addKF(files,cat){
     const id=Date.now()+i+Math.random();
     kfMeta[cat].push({id,name:f.name,size:f.size,cat});
     kfDataMap[id]=f;
+    // שמור base64 ב-localStorage לשימוש לאחר רענון
+    const r=new FileReader();
+    r.onload=function(e){
+      try{ localStorage.setItem('kf_b64_'+id, e.target.result.split(',')[1]); }catch(err){ console.warn('localStorage full',err); }
+    };
+    r.readAsDataURL(f);
   }
   localStorage.setItem(KF_KEY,JSON.stringify(kfMeta));
   renderAllKF(); renderKFList();
@@ -518,6 +527,7 @@ function addKF(files,cat){
 function removeKF(cat,id){
   kfMeta[cat]=kfMeta[cat].filter(f=>f.id!==id);
   delete kfDataMap[id]; selKF.delete(id);
+  localStorage.removeItem('kf_b64_'+id);
   localStorage.setItem(KF_KEY,JSON.stringify(kfMeta));
   renderAllKF(); renderKFList();
 }
@@ -612,15 +622,17 @@ async function runAnalysis(){
   }
 
   for(const kf of selMeta){
+    let b64=null;
     const f=kfDataMap[kf.id];
-    if(!f) continue;
-    try{
-      const b64=await readB64(f);
-      if(f.name.endsWith('.pdf')){
-        msgContent.push({type:'text',text:'\nהנחיה: '+kf.name});
-        msgContent.push({type:'document',source:{type:'base64',media_type:'application/pdf',data:b64}});
-      }
-    }catch(e){}
+    if(f){
+      try{ b64=await readB64(f); }catch(e){}
+    }
+    // fallback: נסה מ-localStorage
+    if(!b64) b64=localStorage.getItem('kf_b64_'+kf.id);
+    if(b64&&kf.name.endsWith('.pdf')){
+      msgContent.push({type:'text',text:'\nהנחיה: '+kf.name});
+      msgContent.push({type:'document',source:{type:'base64',media_type:'application/pdf',data:b64}});
+    }
   }
 
   const systemPrompt=`אתה מהנדסת סביבה ותכנון הבודקת נספחי ניקוז וניהול נגר בתכניות בינוי עבור לשכת תכנון מחוז חיפה.
