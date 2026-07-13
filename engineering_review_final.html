@@ -52,11 +52,7 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--sf2);color:var(--t
 .al-i{background:var(--pr-l);border:.5px solid rgba(29,78,137,.25)}.al-i i{color:var(--pr)}
 .al-w{background:var(--wn-l);border:.5px solid rgba(186,117,23,.25)}.al-w i{color:var(--wn)}
 .al-s{background:var(--ac-l);border:.5px solid rgba(29,158,117,.25)}.al-s i{color:var(--ac)}
-/* ===== FIX: .upz is used both as <div> (block by default) AND as <label> (inline by
-   default) in the admin page. Without an explicit display, the <label> variant stayed
-   inline, so its padding overlapped the text above/below it instead of pushing a full
-   block-level box. Adding display:block fixes it for both usages. ===== */
-.upz{display:block;width:100%;border:2px dashed var(--bd2);border-radius:var(--rd);padding:1.4rem;text-align:center;cursor:pointer;transition:all .15s;background:var(--sf2);margin-bottom:.9rem;position:relative}
+.upz{display:block;border:2px dashed var(--bd2);border-radius:var(--rd);padding:1.4rem;text-align:center;cursor:pointer;transition:all .15s;background:var(--sf2);margin-bottom:.9rem;position:relative}
 .upz:hover{border-color:var(--pr);background:var(--pr-l)}
 .upz input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
 .upz i{font-size:28px;color:var(--tx2);margin-bottom:6px;display:block}
@@ -366,6 +362,14 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--sf2);color:var(--t
 
     <div id="ac-s" style="display:none">
       <div class="card">
+        <div class="ch"><i class="ti ti-api"></i><div><div class="ct">מפתח API</div><div class="cs">מפתח Claude API להפעלת המנוע</div></div></div>
+        <div class="fg">
+          <label class="fl2">מפתח API (sk-ant-api03-...)</label>
+          <input type="password" class="fi3" id="api-key-input" placeholder="sk-ant-api03-..." oninput="saveApiKey(this.value)">
+        </div>
+        <div id="api-key-status" style="font-size:12px;color:var(--ac);min-height:16px;margin-top:-4px;margin-bottom:8px"></div>
+      </div>
+      <div class="card" style="margin-top:.5rem">
         <div class="ch"><i class="ti ti-key"></i><div><div class="ct">שינוי סיסמה</div></div></div>
         <div class="fg"><label class="fl2">סיסמה נוכחית</label><input type="password" class="fi3" id="cp"></div>
         <div class="fg"><label class="fl2">סיסמה חדשה</label><input type="password" class="fi3" id="np"></div>
@@ -402,7 +406,7 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--sf2);color:var(--t
 
 <script>
 const PASS_KEY='eng_pass_v4', KF_KEY='eng_kf_v4', DEF_PASS='admin1234';
-const API_KEY='הכנס-כאן-את-המפתח-שלך';
+let API_KEY=localStorage.getItem('eng_api_key')||'';
 const API_URL='https://api.anthropic.com/v1/messages', MODEL='claude-sonnet-4-20250514';
 
 let authed=false, curMode='first', outputText='';
@@ -424,7 +428,11 @@ function showPg(n){
 }
 
 function goAdmin(){
-  if(authed){ showPg('admin'); return; }
+  if(authed){ 
+    showPg('admin');
+    setTimeout(()=>{ const inp=document.getElementById('api-key-input'); if(inp){ inp.value=API_KEY||''; if(API_KEY) document.getElementById('api-key-status').textContent='✓ מפתח שמור'; } },100);
+    return; 
+  }
   document.getElementById('lo').style.display='flex';
   setTimeout(()=>document.getElementById('li').focus(),100);
 }
@@ -709,6 +717,12 @@ function startNew(){
   ['list-plans','list-prev'].forEach(id=>{ const el=document.getElementById(id); if(el) el.innerHTML=''; });
   ['meta-to','meta-plan','meta-name','meta-prev-date'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
   setMode('first'); goStep(0);
+}
+function saveApiKey(val){
+  API_KEY=val.trim();
+  localStorage.setItem('eng_api_key',API_KEY);
+  const st=document.getElementById('api-key-status');
+  if(st) st.textContent=API_KEY?'✓ מפתח נשמר':'';
 }
 function readB64(file){ return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result.split(',')[1]); r.onerror=rej; r.readAsDataURL(file); }); }
 function fmtSz(b){ if(b<1024) return b+' B'; if(b<1048576) return (b/1024).toFixed(1)+' KB'; return (b/1048576).toFixed(1)+' MB'; }
