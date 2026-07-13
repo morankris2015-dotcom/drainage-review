@@ -172,8 +172,6 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--sf2);color:var(--t
 .lerr{font-size:12px;color:var(--dn);text-align:center;min-height:16px;margin-bottom:7px}
 </style>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-<script>pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";</script>
 </head>
 <body>
 
@@ -510,24 +508,6 @@ const catL={g:'הנחיות',c:'מחשבון',e:'דוגמה',t:'תבנית'};
 const catB={g:'b-key',c:'b-pr',e:'b-ok',t:'b-pr'};
 
 
-// ─── PDF TEXT EXTRACTION ─────────────────────────────────
-async function extractPDFText(file){
-  try{
-    const ab=await file.arrayBuffer();
-    const pdf=await pdfjsLib.getDocument({data:ab}).promise;
-    let text='';
-    for(let i=1;i<=pdf.numPages;i++){
-      const page=await pdf.getPage(i);
-      const tc=await page.getTextContent();
-      text+=tc.items.map(it=>it.str).join(' ')+'\n';
-    }
-    return text.trim();
-  }catch(e){
-    console.error('PDF extract error:',e);
-    return null;
-  }
-}
-
 function addKF(files,cat){
   // רשום את הקבצים מיד — ללא עיבוד. הכל קורה בזמן הבדיקה
   for(const f of files){
@@ -666,67 +646,19 @@ async function runAnalysis(){
     }
   }
 
-  // קבצי מפתח — עיבוד חכם בזמן הבדיקה
+  // קבצי מפתח — שולחים כ-PDF מה-session
   if(selMeta.length>0){
-    setChk(1,'rn','בודק עמודים...');
-
-    // שלב 1: ספור עמודי תוכנית
-    let planPages=0;
-    for(const pf of planFiles){
-      if(pf.b64&&pf.mime==='application/pdf'){
-        try{
-          const ab=Uint8Array.from(atob(pf.b64),c=>c.charCodeAt(0)).buffer;
-          const pd=await pdfjsLib.getDocument({data:ab}).promise;
-          planPages+=pd.numPages;
-        }catch(e){}
-      }
-    }
-
-    // שלב 2: ספור עמודי כל קובץ מפתח
-    const kfInfo=[];
     for(const kf of selMeta){
       const f=kfDataMap[kf.id];
-      if(!f||!f.name.endsWith('.pdf')){ kfInfo.push({kf,pages:0,b64:null}); continue; }
+      if(!f) continue;
       try{
-        const ab=await f.arrayBuffer();
-        const pd=await pdfjsLib.getDocument({data:ab}).promise;
         const b64=await readB64(f);
-        kfInfo.push({kf,pages:pd.numPages,b64,pdfDoc:pd});
-      }catch(e){ kfInfo.push({kf,pages:0,b64:null}); }
-    }
-
-    // שלב 3: קבע מה נשלח כ-PDF ומה כטקסט
-    // מיין לפי עמודים — הגדולים ביותר יהפכו לטקסט אם צריך
-    let totalPages=planPages+kfInfo.reduce((s,k)=>s+k.pages,0);
-    const sorted=[...kfInfo].sort((a,b)=>b.pages-a.pages);
-    const asText=new Set();
-    for(const item of sorted){
-      if(totalPages<=95) break;
-      if(item.pages>30){ asText.add(item.kf.id); totalPages-=item.pages; }
-    }
-    // גם קבצים מעל 30 עמודים — כטקסט
-    for(const item of kfInfo){ if(item.pages>30) asText.add(item.kf.id); }
-
-    // שלב 4: שלח
-    let kfTextAll='\n=== הנחיות ===\n'; let hasKFText=false;
-    for(const {kf,pages,b64,pdfDoc} of kfInfo){
-      if(asText.has(kf.id)&&pdfDoc){
-        // חלץ טקסט
-        let text='';
-        for(let p=1;p<=pdfDoc.numPages;p++){
-          const page=await pdfDoc.getPage(p);
-          const tc=await page.getTextContent();
-          text+=tc.items.map(it=>it.str).join(' ')+'\n';
+        if(f.name.endsWith('.pdf')){
+          msgContent.push({type:'text',text:'\nהנחיה: '+kf.name});
+          msgContent.push({type:'document',source:{type:'base64',media_type:'application/pdf',data:b64}});
         }
-        if(text.trim()){ kfTextAll+='\n--- '+kf.name+' ---\n'+text.trim().substring(0,8000)+'\n'; hasKFText=true; }
-      } else if(b64){
-        // שלח כ-PDF
-        msgContent.push({type:'text',text:'\nהנחיה: '+kf.name});
-        msgContent.push({type:'document',source:{type:'base64',media_type:'application/pdf',data:b64}});
-      }
+      }catch(e){}
     }
-    if(hasKFText) msgContent.push({type:'text',text:kfTextAll});
-    setChk(1,'dn',selMeta.length+' קבצי הנחיה נטענו');
   }
 
   // System prompt — Sivon Krispin style
