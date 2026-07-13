@@ -529,48 +529,14 @@ async function extractPDFText(file){
 }
 
 function addKF(files,cat){
-  // שמור קבצים מיד — חילוץ טקסט ברקע
+  // רשום את הקבצים מיד — ללא עיבוד. הכל קורה בזמן הבדיקה
   for(const f of files){
-    if(cat==='t'&&kfMeta.t.length>=5){/* allow multiple */}
     const id=Date.now()+Math.random();
-    kfMeta[cat].push({id,name:f.name,size:f.size,cat,id_str:id.toString()});
+    kfMeta[cat].push({id,name:f.name,size:f.size,cat});
     kfDataMap[id]=f;
   }
   localStorage.setItem(KF_KEY,JSON.stringify(kfMeta));
   renderAllAdmin(); renderKFList();
-  // חלץ טקסט ברקע לקבצים שצריך
-  processKFFiles(cat);
-}
-
-async function processKFFiles(cat){
-  const items=kfMeta[cat]||[];
-  for(const kf of items){
-    if(localStorage.getItem('kf_mode_'+kf.id)) continue; // כבר עובד
-    const f=kfDataMap[kf.id];
-    if(!f||!f.name.endsWith('.pdf')) continue;
-    try{
-      const ab=await f.arrayBuffer();
-      const pdfDoc=await pdfjsLib.getDocument({data:ab}).promise;
-      const numPages=pdfDoc.numPages;
-      if(numPages<=30){
-        // קטן — שמור כ-PDF
-        const b64=await readB64(f);
-        localStorage.setItem('kf_b64_'+kf.id,b64);
-        localStorage.setItem('kf_mode_'+kf.id,'pdf');
-      } else {
-        // גדול — חלץ טקסט
-        let text='';
-        for(let p=1;p<=numPages;p++){
-          const page=await pdfDoc.getPage(p);
-          const tc=await page.getTextContent();
-          text+=tc.items.map(it=>it.str).join(' ')+'\n';
-        }
-        if(text.trim()) localStorage.setItem('kf_text_'+kf.id,text.trim());
-        localStorage.setItem('kf_mode_'+kf.id,'text');
-      }
-      renderAllAdmin();
-    }catch(e){ console.error('processKF error',e); }
-  }
 }
 function removeKF(cat,id){
   kfMeta[cat]=kfMeta[cat].filter(f=>f.id!==id);
@@ -700,10 +666,11 @@ async function runAnalysis(){
     }
   }
 
-  // קבצי מפתח — עד 30 עמודים כ-PDF, מעל 30 כטקסט. אם סה"כ עמודים >100 — חלץ את הגדול ביותר
+  // קבצי מפתח — עיבוד חכם בזמן הבדיקה
   if(selMeta.length>0){
+    setChk(1,'rn','בודק עמודים...');
 
-    // ספור עמודי תוכנית
+    // שלב 1: ספור עמודי תוכנית
     let planPages=0;
     for(const pf of planFiles){
       if(pf.b64&&pf.mime==='application/pdf'){
@@ -715,87 +682,51 @@ async function runAnalysis(){
       }
     }
 
-    // ספור עמודי קבצי מפתח (PDF בלבד) + מצא את הגדול ביותר
-    const kfPageMap={};
-    let totalKFPages=0;
+    // שלב 2: ספור עמודי כל קובץ מפתח
+    const kfInfo=[];
     for(const kf of selMeta){
-      const mode=localStorage.getItem('kf_mode_'+kf.id);
-      if(mode==='pdf'){
-        const b64=localStorage.getItem('kf_b64_'+kf.id);
-        if(b64){
-          try{
-            const ab=Uint8Array.from(atob(b64),c=>c.charCodeAt(0)).buffer;
-            const pd=await pdfjsLib.getDocument({data:ab}).promise;
-            kfPageMap[kf.id]=pd.numPages;
-            totalKFPages+=pd.numPages;
-          }catch(e){ kfPageMap[kf.id]=0; }
-        }
-      }
+      const f=kfDataMap[kf.id];
+      if(!f||!f.name.endsWith('.pdf')){ kfInfo.push({kf,pages:0,b64:null}); continue; }
+      try{
+        const ab=await f.arrayBuffer();
+        const pd=await pdfjsLib.getDocument({data:ab}).promise;
+        const b64=await readB64(f);
+        kfInfo.push({kf,pages:pd.numPages,b64,pdfDoc:pd});
+      }catch(e){ kfInfo.push({kf,pages:0,b64:null}); }
     }
 
-    // אם סה"כ עולה על 100 — חלץ טקסט מהקובץ הגדול ביותר עד שנורמלי
-    let forceTextIds=new Set();
-    while(planPages+totalKFPages>95){
-      // מצא את הקובץ עם הכי הרבה עמודים
-      let maxId=null, maxPages=0;
-      for(const [id,pages] of Object.entries(kfPageMap)){
-        if(!forceTextIds.has(id)&&pages>maxPages){ maxPages=pages; maxId=id; }
-      }
-      if(!maxId) break;
-      forceTextIds.add(maxId);
-      totalKFPages-=maxPages;
+    // שלב 3: קבע מה נשלח כ-PDF ומה כטקסט
+    // מיין לפי עמודים — הגדולים ביותר יהפכו לטקסט אם צריך
+    let totalPages=planPages+kfInfo.reduce((s,k)=>s+k.pages,0);
+    const sorted=[...kfInfo].sort((a,b)=>b.pages-a.pages);
+    const asText=new Set();
+    for(const item of sorted){
+      if(totalPages<=95) break;
+      if(item.pages>30){ asText.add(item.kf.id); totalPages-=item.pages; }
     }
+    // גם קבצים מעל 30 עמודים — כטקסט
+    for(const item of kfInfo){ if(item.pages>30) asText.add(item.kf.id); }
 
-    // שלח קבצי מפתח
-    let kfTextAll='\n=== הנחיות ===\n';
-    let hasKFText=false;
-    for(const kf of selMeta){
-      const mode=localStorage.getItem('kf_mode_'+kf.id);
-      const forceText=forceTextIds.has(kf.id.toString());
-
-      if(mode==='text'||forceText){
-        // שלח כטקסט
-        let text=localStorage.getItem('kf_text_'+kf.id);
-        if(!text&&forceText){
-          // חלץ עכשיו מה-PDF השמור
-          const b64=localStorage.getItem('kf_b64_'+kf.id);
-          if(b64){
-            try{
-              const ab=Uint8Array.from(atob(b64),c=>c.charCodeAt(0)).buffer;
-              const pd=await pdfjsLib.getDocument({data:ab}).promise;
-              let t='';
-              for(let p=1;p<=pd.numPages;p++){
-                const page=await pd.getPage(p);
-                const tc=await page.getTextContent();
-                t+=tc.items.map(it=>it.str).join(' ')+'\n';
-              }
-              text=t.trim();
-              localStorage.setItem('kf_text_'+kf.id,text);
-              localStorage.setItem('kf_mode_'+kf.id,'text');
-            }catch(e){}
-          }
+    // שלב 4: שלח
+    let kfTextAll='\n=== הנחיות ===\n'; let hasKFText=false;
+    for(const {kf,pages,b64,pdfDoc} of kfInfo){
+      if(asText.has(kf.id)&&pdfDoc){
+        // חלץ טקסט
+        let text='';
+        for(let p=1;p<=pdfDoc.numPages;p++){
+          const page=await pdfDoc.getPage(p);
+          const tc=await page.getTextContent();
+          text+=tc.items.map(it=>it.str).join(' ')+'\n';
         }
-        if(text){ kfTextAll+='\n--- '+kf.name+' ---\n'+text.substring(0,8000)+'\n'; hasKFText=true; }
-      } else if(mode==='pdf'){
+        if(text.trim()){ kfTextAll+='\n--- '+kf.name+' ---\n'+text.trim().substring(0,8000)+'\n'; hasKFText=true; }
+      } else if(b64){
         // שלח כ-PDF
-        const b64=localStorage.getItem('kf_b64_'+kf.id);
-        if(b64){
-          msgContent.push({type:'text',text:'\nהנחיה: '+kf.name});
-          msgContent.push({type:'document',source:{type:'base64',media_type:'application/pdf',data:b64}});
-        }
-      } else {
-        // session בלבד
-        const fileObj=kfDataMap[kf.id];
-        if(fileObj){
-          try{
-            const b64=await readB64(fileObj);
-            msgContent.push({type:'text',text:'\nהנחיה: '+kf.name});
-            msgContent.push({type:'document',source:{type:'base64',media_type:'application/pdf',data:b64}});
-          }catch(e){}
-        }
+        msgContent.push({type:'text',text:'\nהנחיה: '+kf.name});
+        msgContent.push({type:'document',source:{type:'base64',media_type:'application/pdf',data:b64}});
       }
     }
     if(hasKFText) msgContent.push({type:'text',text:kfTextAll});
+    setChk(1,'dn',selMeta.length+' קבצי הנחיה נטענו');
   }
 
   // System prompt — Sivon Krispin style
