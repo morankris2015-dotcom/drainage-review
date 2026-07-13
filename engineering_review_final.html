@@ -180,7 +180,7 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--sf2);color:var(--t
     <i class="ti ti-building-skyscraper"></i>
     <div>
       <h1>מערכת בדיקת תוכניות ניקוז</h1>
-      <small>סביבה ותכנון · מחוז חיפה · תמ"א 1 · <strong style="color:var(--pr)">v1.4</strong></small>
+      <small>סביבה ותכנון · מחוז חיפה · תמ"א 1</small>
     </div>
   </div>
   <div class="nav-links">
@@ -375,7 +375,6 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--sf2);color:var(--t
       <div class="cat"><div class="cath"><div class="catt" style="color:var(--pr)"><i class="ti ti-template" style="color:var(--pr)"></i> תבנית סגנון ההתייחסות</div><button class="btn btn-p" style="padding:5px 11px;font-size:12px" onclick="trigUp('up-t')"><i class="ti ti-upload"></i> העלה</button><input type="file" id="up-t" accept=".pdf,.docx" style="display:none" onchange="addKF(this.files,'t')"></div><div class="catb"><div class="cat-hint">קבצי התייחסות לדוגמה — המנוע ישמור על אותו ניסוח, מבנה, ורמת פירוט.</div><div class="al al-w" style="margin-bottom:8px"><i class="ti ti-alert-triangle"></i><div>ניתן להעלות מספר קבצי דוגמה. קובץ חדש יתווסף לדוגמאות הקיימות.</div></div><div class="fl" id="kfl-t"><div style="text-align:center;padding:.9rem;color:var(--tx2);font-size:12px">אין תבנית</div></div></div></div>
     </div>
     <div id="ac-s" style="display:none">
-      <div class="card" style="margin-bottom:.5rem"><div class="ch"><i class="ti ti-api"></i><div><div class="ct">מפתח API של Anthropic</div></div></div><div class="al al-i"><i class="ti ti-info-circle"></i><div>המפתח נשמר בדפדפן בלבד ולא נשלח לשום מקום אחר.</div></div><div class="fg"><label class="fl2">מפתח API</label><input type="password" class="fi3" id="api-key-input" placeholder="sk-ant-..." dir="ltr"></div><div id="akmsg" style="font-size:12px;min-height:16px;margin-bottom:7px"></div><button class="btn btn-p" onclick="saveApiKey()"><i class="ti ti-check"></i> שמור מפתח</button></div>
       <div class="card"><div class="ch"><i class="ti ti-key"></i><div><div class="ct">שינוי סיסמת מנהל</div></div></div><div class="al al-w"><i class="ti ti-alert-triangle"></i><div>הסיסמה נשמרת בדפדפן בלבד.</div></div><div class="fg"><label class="fl2">סיסמה נוכחית</label><input type="password" class="fi3" id="cp" placeholder="••••••••"></div><div class="fg"><label class="fl2">סיסמה חדשה</label><input type="password" class="fi3" id="np" placeholder="מינ׳ 6 תווים"></div><div class="fg"><label class="fl2">אימות</label><input type="password" class="fi3" id="cfp" placeholder="חזור על הסיסמה"></div><div id="pmsg" style="font-size:12px;min-height:16px;margin-bottom:7px"></div><button class="btn btn-p" onclick="chPass()"><i class="ti ti-check"></i> עדכן</button></div>
       <div class="card" style="margin-top:.5rem"><div class="ch"><i class="ti ti-logout"></i><div><div class="ct">יציאה ממצב ניהול</div></div></div><button class="btn btn-d" onclick="logout()"><i class="ti ti-logout"></i> התנתק</button></div>
     </div>
@@ -396,80 +395,21 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--sf2);color:var(--t
 <script>
 // ─── CONFIG ─────────────────────────────────────────
 const PASS_KEY='eng_pass_v2', KF_KEY='eng_kf_v2', DEF_PASS='admin1234';
-const API_KEY_STORE='eng_api_key_v1';
-let API_KEY=localStorage.getItem(API_KEY_STORE)||'';
-const API_URL='https://api.anthropic.com/v1/messages', MODEL='claude-haiku-4-5-20251001';
+const API_KEY='הכנס-כאן-את-המפתח-שלך'; // ← החלף את הטקסט הזה במפתח שלך
+const API_URL='https://api.anthropic.com/v1/messages', MODEL='claude-sonnet-4-20250514';
 
 // ─── STATE ───────────────────────────────────────────
 let authed=false, curMode='first', curMainStep=0, outputText='';
 let planFiles=[], prevFile=null;
 let kfMeta={g:[],c:[],e:[],t:[]}, kfDataMap={};
 let selKF=new Set();
-let db=null;
-
-// ─── INDEXEDDB ────────────────────────────────────────
-function openDB(){
-  return new Promise((res,rej)=>{
-    const req=indexedDB.open('eng_kf_db',1);
-    req.onupgradeneeded=e=>{e.target.result.createObjectStore('files',{keyPath:'id'});};
-    req.onsuccess=e=>{res(e.target.result);};
-    req.onerror=e=>{rej(e);};
-  });
-}
-function dbPut(id,data){
-  return new Promise((res,rej)=>{
-    if(!db){res();return;}
-    const tx=db.transaction('files','readwrite');
-    tx.objectStore('files').put({id:String(id),data});
-    tx.oncomplete=()=>res();tx.onerror=e=>rej(e);
-  });
-}
-function dbGet(id){
-  return new Promise((res,rej)=>{
-    if(!db){res(null);return;}
-    const tx=db.transaction('files','readonly');
-    const req=tx.objectStore('files').get(String(id));
-    req.onsuccess=e=>res(e.target.result?.data||null);
-    req.onerror=e=>rej(e);
-  });
-}
-function dbDel(id){
-  return new Promise((res,rej)=>{
-    if(!db){res();return;}
-    const tx=db.transaction('files','readwrite');
-    tx.objectStore('files').delete(String(id));
-    tx.oncomplete=()=>res();tx.onerror=e=>rej(e);
-  });
-}
-function dbGetAll(){
-  return new Promise((res,rej)=>{
-    if(!db){res({});return;}
-    const tx=db.transaction('files','readonly');
-    const req=tx.objectStore('files').getAll();
-    req.onsuccess=e=>{
-      const map={};
-      e.target.result.forEach(r=>{map[r.id]=r.data;});
-      res(map);
-    };
-    req.onerror=e=>rej(e);
-  });
-}
 
 // ─── INIT ─────────────────────────────────────────────
-(async function(){
+(function(){
   if(!localStorage.getItem(PASS_KEY)) localStorage.setItem(PASS_KEY,DEF_PASS);
   const s=localStorage.getItem(KF_KEY);
   if(s) try{kfMeta=JSON.parse(s);}catch(e){}
-  try{
-    db=await openDB();
-    kfDataMap=await dbGetAll();
-  }catch(e){console.warn('IndexedDB error',e);}
   renderAllAdmin(); renderKFList();
-  // Load API key into input if exists
-  const savedKey=localStorage.getItem(API_KEY_STORE)||'';
-  if(savedKey) API_KEY=savedKey;
-  const akInput=document.getElementById('api-key-input');
-  if(akInput&&savedKey) akInput.value=savedKey;
 })();
 
 // ─── NAV ─────────────────────────────────────────────
@@ -492,15 +432,6 @@ function doLogin(){
   else{document.getElementById('lerr').textContent='סיסמה שגויה';document.getElementById('li').value='';document.getElementById('li').focus();}
 }
 function logout(){authed=false;showPg('main');}
-function saveApiKey(){
-  const v=document.getElementById('api-key-input').value.trim();
-  const msg=document.getElementById('akmsg');
-  if(!v.startsWith('sk-')){msg.style.color='#A32D2D';msg.textContent='מפתח לא תקין — חייב להתחיל ב-sk-';return;}
-  localStorage.setItem(API_KEY_STORE,v);
-  API_KEY=v;
-  msg.style.color='#1D9E75';msg.textContent='✓ מפתח נשמר';
-  setTimeout(()=>msg.textContent='',3000);
-}
 function chPass(){
   const c=document.getElementById('cp').value,n=document.getElementById('np').value,f=document.getElementById('cfp').value;
   const msg=document.getElementById('pmsg'),s=localStorage.getItem(PASS_KEY)||DEF_PASS;
@@ -575,24 +506,20 @@ function renderFileList(elId,files,type){
 const catL={g:'הנחיות',c:'מחשבון',e:'דוגמה',t:'תבנית'};
 const catB={g:'b-key',c:'b-pr',e:'b-ok',t:'b-pr'};
 
-async function addKF(files,cat){
+function addKF(files,cat){
   for(const f of files){
+    if(cat==='t'&&kfMeta.t.length>=5){/* allow multiple */}
     const id=Date.now()+Math.random();
-    try{
-      const b64=await readB64(f);
-      kfMeta[cat].push({id,name:f.name,size:f.size,cat});
-      kfDataMap[id]={name:f.name,b64,mime:f.type};
-      await dbPut(id,{name:f.name,b64,mime:f.type});
-    }catch(e){console.error('שגיאה בהעלאת קובץ',f.name,e);}
+    kfMeta[cat].push({id,name:f.name,size:f.size,cat});
+    kfDataMap[id]=f;
   }
   localStorage.setItem(KF_KEY,JSON.stringify(kfMeta));
   renderAllAdmin(); renderKFList();
 }
-async function removeKF(cat,id){
+function removeKF(cat,id){
   kfMeta[cat]=kfMeta[cat].filter(f=>f.id!==id);
-  delete kfDataMap[id]; selKF.delete(parseFloat(id));
+  delete kfDataMap[id]; selKF.delete(id);
   localStorage.setItem(KF_KEY,JSON.stringify(kfMeta));
-  await dbDel(id);
   renderAllAdmin(); renderKFList();
 }
 function trigUp(id){document.getElementById(id).click();}
@@ -710,24 +637,9 @@ async function runAnalysis(){
     }
   }
 
-  // KF files (session or localStorage)
-  if(Object.keys(kfDataMap).length>0){
-    const selIds=selKF.size>0?selKF:new Set(allKF.map(f=>f.id));
-    msgContent.push({type:'text',text:'\n=== קבצי הנחיות ===\n'});
-    for(const [id,fileData] of Object.entries(kfDataMap)){
-      if(!selIds.has(parseFloat(id))) continue;
-      try{
-        const b64=fileData.b64;
-        const mime=fileData.mime||'application/pdf';
-        const name=fileData.name||id;
-        if(name.endsWith('.pdf')||mime==='application/pdf'){
-          msgContent.push({type:'text',text:`הנחיה: ${name}`});
-          msgContent.push({type:'document',source:{type:'base64',media_type:'application/pdf',data:b64}});
-        }
-      }catch(e){msgContent.push({type:'text',text:`[${fileData.name||id} — לא נטען]`});}
-    }
-  } else if(selMeta.length>0){
-    msgContent.push({type:'text',text:`\n[קבצי מפתח שנבחרו: ${selMeta.map(f=>f.name).join(', ')}]`});
+  // קבצי מפתח — שמות בלבד, הידע מוטמע ב-prompt
+  if(selMeta.length>0){
+    msgContent.push({type:'text',text:'\n=== הנחיות: '+selMeta.map(f=>f.name).join(', ')});
   }
 
   // System prompt — Sivon Krispin style
@@ -799,7 +711,7 @@ ${isUpdate?`=== עדכון — כללי מעקב ===
   try{
     const resp=await fetch(API_URL,{
       method:'POST',
-      headers:{'Content-Type':'application/json','x-api-key':API_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      headers:{'Content-Type':'application/json','x-api-key':API_KEY,'anthropic-version':'2023-06-01'},
       body:JSON.stringify({model:MODEL,max_tokens:4000,stream:true,system:systemPrompt,messages:[{role:'user',content:msgContent}]})
     });
     if(!resp.ok){const e=await resp.json();throw new Error(e.error?.message||'שגיאת API');}
