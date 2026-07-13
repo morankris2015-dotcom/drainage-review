@@ -366,16 +366,16 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--sf2);color:var(--t
   </div>
   <div class="adc">
     <div id="ac-g">
-      <div class="cat"><div class="cath"><div class="catt" style="color:var(--pr)"><i class="ti ti-book-2" style="color:var(--pr)"></i> תמ"א 1 והנחיות מקצועיות</div><button class="btn btn-p" style="padding:5px 11px;font-size:12px" onclick="trigUp('up-g')"><i class="ti ti-upload"></i> הוסף</button><input type="file" id="up-g" accept=".pdf,.docx" multiple style="display:none" onchange="addKF(this.files,'g')"></div><div class="catb"><div class="cat-hint">תמ"א 1 תיקון 7 ו-8, הנחיות כתיבה, דרישות רגולטוריות. קבצים אלה ישמשו בסיס לכל הבדיקות.</div><div class="fl" id="kfl-g"><div style="text-align:center;padding:.9rem;color:var(--tx2);font-size:12px">אין קבצים — לחץ "הוסף"</div></div></div></div>
+      <div class="cat"><div class="cath"><div class="catt" style="color:var(--pr)"><i class="ti ti-book-2" style="color:var(--pr)"></i> תמ"א 1 והנחיות מקצועיות</div><button class="btn btn-p" style="padding:5px 11px;font-size:12px" onclick="trigUp('up-g')"><i class="ti ti-upload"></i> הוסף</button><input type="file" id="up-g" accept=".pdf,.docx" multiple style="display:none" onchange="(async()=>await addKF(this.files,'g'))()"></div><div class="catb"><div class="cat-hint">תמ"א 1 תיקון 7 ו-8, הנחיות כתיבה, דרישות רגולטוריות. קבצים אלה ישמשו בסיס לכל הבדיקות.</div><div class="fl" id="kfl-g"><div style="text-align:center;padding:.9rem;color:var(--tx2);font-size:12px">אין קבצים — לחץ "הוסף"</div></div></div></div>
     </div>
     <div id="ac-c" style="display:none">
-      <div class="cat"><div class="cath"><div class="catt" style="color:var(--pr)"><i class="ti ti-calculator" style="color:var(--pr)"></i> מחשבוני ניהול נגר</div><button class="btn btn-p" style="padding:5px 11px;font-size:12px" onclick="trigUp('up-c')"><i class="ti ti-upload"></i> הוסף</button><input type="file" id="up-c" accept=".pdf,.xlsx" multiple style="display:none" onchange="addKF(this.files,'c')"></div><div class="catb"><div class="cat-hint">מחשבוני ספיקות, מעטפת נפחים, יעדי ניהול נגר — PDF או Excel.</div><div class="fl" id="kfl-c"><div style="text-align:center;padding:.9rem;color:var(--tx2);font-size:12px">אין קבצים</div></div></div></div>
+      <div class="cat"><div class="cath"><div class="catt" style="color:var(--pr)"><i class="ti ti-calculator" style="color:var(--pr)"></i> מחשבוני ניהול נגר</div><button class="btn btn-p" style="padding:5px 11px;font-size:12px" onclick="trigUp('up-c')"><i class="ti ti-upload"></i> הוסף</button><input type="file" id="up-c" accept=".pdf,.xlsx" multiple style="display:none" onchange="(async()=>await addKF(this.files,'c'))()"></div><div class="catb"><div class="cat-hint">מחשבוני ספיקות, מעטפת נפחים, יעדי ניהול נגר — PDF או Excel.</div><div class="fl" id="kfl-c"><div style="text-align:center;padding:.9rem;color:var(--tx2);font-size:12px">אין קבצים</div></div></div></div>
     </div>
     <div id="ac-e" style="display:none">
-      <div class="cat"><div class="cath"><div class="catt" style="color:var(--pr)"><i class="ti ti-files" style="color:var(--pr)"></i> נספחי ניקוז לדוגמה</div><button class="btn btn-p" style="padding:5px 11px;font-size:12px" onclick="trigUp('up-e')"><i class="ti ti-upload"></i> הוסף</button><input type="file" id="up-e" accept=".pdf" multiple style="display:none" onchange="addKF(this.files,'e')"></div><div class="catb"><div class="cat-hint">דוגמאות לנספחי ניקוז מוסדרים — לכיוון המנוע לרמת הבדיקה הנדרשת.</div><div class="fl" id="kfl-e"><div style="text-align:center;padding:.9rem;color:var(--tx2);font-size:12px">אין קבצים</div></div></div></div>
+      <div class="cat"><div class="cath"><div class="catt" style="color:var(--pr)"><i class="ti ti-files" style="color:var(--pr)"></i> נספחי ניקוז לדוגמה</div><button class="btn btn-p" style="padding:5px 11px;font-size:12px" onclick="trigUp('up-e')"><i class="ti ti-upload"></i> הוסף</button><input type="file" id="up-e" accept=".pdf" multiple style="display:none" onchange="(async()=>await addKF(this.files,'e'))()"></div><div class="catb"><div class="cat-hint">דוגמאות לנספחי ניקוז מוסדרים — לכיוון המנוע לרמת הבדיקה הנדרשת.</div><div class="fl" id="kfl-e"><div style="text-align:center;padding:.9rem;color:var(--tx2);font-size:12px">אין קבצים</div></div></div></div>
     </div>
     <div id="ac-t" style="display:none">
-      <div class="cat"><div class="cath"><div class="catt" style="color:var(--pr)"><i class="ti ti-template" style="color:var(--pr)"></i> תבנית סגנון ההתייחסות</div><button class="btn btn-p" style="padding:5px 11px;font-size:12px" onclick="trigUp('up-t')"><i class="ti ti-upload"></i> העלה</button><input type="file" id="up-t" accept=".pdf,.docx" style="display:none" onchange="addKF(this.files,'t')"></div><div class="catb"><div class="cat-hint">קבצי התייחסות לדוגמה — המנוע ישמור על אותו ניסוח, מבנה, ורמת פירוט.</div><div class="al al-w" style="margin-bottom:8px"><i class="ti ti-alert-triangle"></i><div>ניתן להעלות מספר קבצי דוגמה. קובץ חדש יתווסף לדוגמאות הקיימות.</div></div><div class="fl" id="kfl-t"><div style="text-align:center;padding:.9rem;color:var(--tx2);font-size:12px">אין תבנית</div></div></div></div>
+      <div class="cat"><div class="cath"><div class="catt" style="color:var(--pr)"><i class="ti ti-template" style="color:var(--pr)"></i> תבנית סגנון ההתייחסות</div><button class="btn btn-p" style="padding:5px 11px;font-size:12px" onclick="trigUp('up-t')"><i class="ti ti-upload"></i> העלה</button><input type="file" id="up-t" accept=".pdf,.docx" style="display:none" onchange="(async()=>await addKF(this.files,'t'))()"></div><div class="catb"><div class="cat-hint">קבצי התייחסות לדוגמה — המנוע ישמור על אותו ניסוח, מבנה, ורמת פירוט.</div><div class="al al-w" style="margin-bottom:8px"><i class="ti ti-alert-triangle"></i><div>ניתן להעלות מספר קבצי דוגמה. קובץ חדש יתווסף לדוגמאות הקיימות.</div></div><div class="fl" id="kfl-t"><div style="text-align:center;padding:.9rem;color:var(--tx2);font-size:12px">אין תבנית</div></div></div></div>
     </div>
     <div id="ac-s" style="display:none">
       <div class="card"><div class="ch"><i class="ti ti-key"></i><div><div class="ct">שינוי סיסמת מנהל</div></div></div><div class="al al-w"><i class="ti ti-alert-triangle"></i><div>הסיסמה נשמרת בדפדפן בלבד.</div></div><div class="fg"><label class="fl2">סיסמה נוכחית</label><input type="password" class="fi3" id="cp" placeholder="••••••••"></div><div class="fg"><label class="fl2">סיסמה חדשה</label><input type="password" class="fi3" id="np" placeholder="מינ׳ 6 תווים"></div><div class="fg"><label class="fl2">אימות</label><input type="password" class="fi3" id="cfp" placeholder="חזור על הסיסמה"></div><div id="pmsg" style="font-size:12px;min-height:16px;margin-bottom:7px"></div><button class="btn btn-p" onclick="chPass()"><i class="ti ti-check"></i> עדכן</button></div>
@@ -529,13 +529,17 @@ async function extractPDFText(file){
 }
 
 async function addKF(files,cat){
+  // הראה אינדיקטור טעינה
+  const listEl=document.getElementById('kfl-'+cat);
+  if(listEl) listEl.innerHTML='<div style="text-align:center;padding:.9rem;color:var(--pr);font-size:12px"><i class="ti ti-loader-2" style="animation:sp .7s linear infinite;font-size:20px;display:block;margin-bottom:5px"></i>מחלץ טקסט...</div>';
   for(const f of files){
     if(cat==='t'&&kfMeta.t.length>=5){/* allow multiple */}
     const id=Date.now()+Math.random();
     kfMeta[cat].push({id,name:f.name,size:f.size,cat,id_str:id.toString()});
     kfDataMap[id]=f;
-    // חלץ טקסט מה-PDF ושמור ב-localStorage
-    if(f.name.endsWith('.pdf')||f.name.endsWith('.docx')){
+    // חלץ טקסט רק מקבצים גדולים (מעל 300KB) — קבצים קטנים נשלחים כ-PDF
+    const LARGE_FILE=300*1024;
+    if((f.name.endsWith('.pdf')||f.name.endsWith('.docx'))&&f.size>LARGE_FILE){
       try{
         const text=await extractPDFText(f);
         if(text) localStorage.setItem('kf_text_'+id,text);
@@ -549,6 +553,8 @@ function removeKF(cat,id){
   kfMeta[cat]=kfMeta[cat].filter(f=>f.id!==id);
   delete kfDataMap[id]; selKF.delete(id);
   localStorage.removeItem('kf_text_'+id);
+  localStorage.removeItem('kf_b64_'+id);
+  localStorage.removeItem('kf_mode_'+id);
   localStorage.setItem(KF_KEY,JSON.stringify(kfMeta));
   renderAllAdmin(); renderKFList();
 }
@@ -671,18 +677,102 @@ async function runAnalysis(){
     }
   }
 
-  // קבצי מפתח — שולחים טקסט מחולץ, לא PDF
+  // קבצי מפתח — עד 30 עמודים כ-PDF, מעל 30 כטקסט. אם סה"כ עמודים >100 — חלץ את הגדול ביותר
   if(selMeta.length>0){
-    let kfTextAll='\n=== הנחיות ומפתחות ===\n';
-    for(const kf of selMeta){
-      const stored=localStorage.getItem('kf_text_'+kf.id);
-      if(stored){
-        kfTextAll+='\n--- '+kf.name+' ---\n'+stored.substring(0,8000)+'\n';
-      } else {
-        kfTextAll+='\n['+kf.name+']\n';
+
+    // ספור עמודי תוכנית
+    let planPages=0;
+    for(const pf of planFiles){
+      if(pf.b64&&pf.mime==='application/pdf'){
+        try{
+          const ab=Uint8Array.from(atob(pf.b64),c=>c.charCodeAt(0)).buffer;
+          const pd=await pdfjsLib.getDocument({data:ab}).promise;
+          planPages+=pd.numPages;
+        }catch(e){}
       }
     }
-    msgContent.push({type:'text',text:kfTextAll});
+
+    // ספור עמודי קבצי מפתח (PDF בלבד) + מצא את הגדול ביותר
+    const kfPageMap={};
+    let totalKFPages=0;
+    for(const kf of selMeta){
+      const mode=localStorage.getItem('kf_mode_'+kf.id);
+      if(mode==='pdf'){
+        const b64=localStorage.getItem('kf_b64_'+kf.id);
+        if(b64){
+          try{
+            const ab=Uint8Array.from(atob(b64),c=>c.charCodeAt(0)).buffer;
+            const pd=await pdfjsLib.getDocument({data:ab}).promise;
+            kfPageMap[kf.id]=pd.numPages;
+            totalKFPages+=pd.numPages;
+          }catch(e){ kfPageMap[kf.id]=0; }
+        }
+      }
+    }
+
+    // אם סה"כ עולה על 100 — חלץ טקסט מהקובץ הגדול ביותר עד שנורמלי
+    let forceTextIds=new Set();
+    while(planPages+totalKFPages>95){
+      // מצא את הקובץ עם הכי הרבה עמודים
+      let maxId=null, maxPages=0;
+      for(const [id,pages] of Object.entries(kfPageMap)){
+        if(!forceTextIds.has(id)&&pages>maxPages){ maxPages=pages; maxId=id; }
+      }
+      if(!maxId) break;
+      forceTextIds.add(maxId);
+      totalKFPages-=maxPages;
+    }
+
+    // שלח קבצי מפתח
+    let kfTextAll='\n=== הנחיות ===\n';
+    let hasKFText=false;
+    for(const kf of selMeta){
+      const mode=localStorage.getItem('kf_mode_'+kf.id);
+      const forceText=forceTextIds.has(kf.id.toString());
+
+      if(mode==='text'||forceText){
+        // שלח כטקסט
+        let text=localStorage.getItem('kf_text_'+kf.id);
+        if(!text&&forceText){
+          // חלץ עכשיו מה-PDF השמור
+          const b64=localStorage.getItem('kf_b64_'+kf.id);
+          if(b64){
+            try{
+              const ab=Uint8Array.from(atob(b64),c=>c.charCodeAt(0)).buffer;
+              const pd=await pdfjsLib.getDocument({data:ab}).promise;
+              let t='';
+              for(let p=1;p<=pd.numPages;p++){
+                const page=await pd.getPage(p);
+                const tc=await page.getTextContent();
+                t+=tc.items.map(it=>it.str).join(' ')+'\n';
+              }
+              text=t.trim();
+              localStorage.setItem('kf_text_'+kf.id,text);
+              localStorage.setItem('kf_mode_'+kf.id,'text');
+            }catch(e){}
+          }
+        }
+        if(text){ kfTextAll+='\n--- '+kf.name+' ---\n'+text.substring(0,8000)+'\n'; hasKFText=true; }
+      } else if(mode==='pdf'){
+        // שלח כ-PDF
+        const b64=localStorage.getItem('kf_b64_'+kf.id);
+        if(b64){
+          msgContent.push({type:'text',text:'\nהנחיה: '+kf.name});
+          msgContent.push({type:'document',source:{type:'base64',media_type:'application/pdf',data:b64}});
+        }
+      } else {
+        // session בלבד
+        const fileObj=kfDataMap[kf.id];
+        if(fileObj){
+          try{
+            const b64=await readB64(fileObj);
+            msgContent.push({type:'text',text:'\nהנחיה: '+kf.name});
+            msgContent.push({type:'document',source:{type:'base64',media_type:'application/pdf',data:b64}});
+          }catch(e){}
+        }
+      }
+    }
+    if(hasKFText) msgContent.push({type:'text',text:kfTextAll});
   }
 
   // System prompt — Sivon Krispin style
